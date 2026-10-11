@@ -2,9 +2,11 @@
 
 A 3D-printed case for one Adafruit 64x32 P3 LED matrix (#2279), a Raspberry Pi 4
 and the Adafruit RGB Matrix Bonnet (#3211). It has a slim front bezel, a rear
-shell that holds the panel by its own M3 inserts and carries the Pi behind it,
-and a desk stand tilted back 6 degrees. Everything is printable in PLA or PETG
-with no supports, and assembly needs no soldering or heat-set inserts.
+shell that holds the panel with printed pins in the panel's own M3 inserts and
+carries the Pi behind it, and a desk stand tilted back 6 degrees. Everything is
+printable in PLA or PETG with no supports. The default build needs **no screws,
+nuts or other metal hardware**, and no soldering or heat-set inserts. The screw
+build is still there as an [option](#screw-build).
 
 ![Front, on the desk stand](renders/front_3q.png)
 
@@ -14,12 +16,12 @@ with no supports, and assembly needs no soldering or heat-set inserts.
 | On the stand | 170 x 100 mm footprint, top of the case about 120 mm above the desk |
 | Pi + bonnet stack | 30.2 mm, including the PCB and the 3 mm standoff (see [stack height](#pi--bonnet-stack-height)) |
 | Bezel | about 2.5 mm visible border; hides **no** pixels |
-| Parts | bezel, shell, stand, 2 spacers (plus a test coupon) |
-| Print | about 10 h and 190 g of PLA for the whole set |
+| Parts | bezel, shell, stand, 2 spacers, snap pins (plus a test coupon) |
+| Print | about 10 h and 190 g of PLA for the whole set, plus about 1 g of pins |
 
 > **Before you print:** several part dimensions could not be read from an
 > official drawing. They are marked `UNVERIFIED` in `enclosure.scad`. Print the
-> 3 g [test coupon](#test-fit-coupon) first, measure your parts with calipers
+> 5 g [test coupon](#test-fit-coupon) first, measure your parts with calipers
 > ([how](#unverified-dimensions-and-how-to-measure-them)), edit the numbers,
 > and re-export.
 
@@ -47,7 +49,8 @@ with no supports, and assembly needs no soldering or heat-set inserts.
 | `stl/shell.stl` | Rear shell, in print orientation |
 | `stl/stand.stl` | Desk stand |
 | `stl/spacers.stl` | 2 spacers that go between the Pi and the bonnet |
-| `stl/coupon.stl` | Test-fit coupon (4 small pieces, 3 g) |
+| `stl/snap_pins.stl` | The printed pins that replace every screw: 5 panel pins, 3 short and 3 long Pi pins (each with a spare) |
+| `stl/coupon.stl` | Test-fit coupon (5 small pieces and 2 test pins, 5 g) |
 | `stl/two_panel/` | Split parts for the future 128x32 (two-panel) build |
 | `renders/` | Preview PNGs |
 | `export.sh`, `render.sh`, `check.sh` | Rebuild the STLs, the PNGs, and the collision checks |
@@ -65,16 +68,25 @@ The case has three printed parts:
   shell and clicks in with six snap-fits (two on top, two on the bottom, one at
   each end).
 - **Shell (rear).** The panel is held by its own M3 inserts on four hollow posts.
-  You drive the screws from the back through 7 mm screwdriver wells. The Pi
-  sits on four printed standoffs on the inside of the back wall, with its
+  You push a printed pin from the back down each 7 mm screwdriver well into
+  the insert. The Pi sits on four printed standoffs on the inside of the back wall, with its
   components (and the bonnet) **facing the panel**. That is the shallowest
   layout: the 3 mm under the Pi is needed anyway for the microSD socket and
   solder pins.
-- **Stand.** A wide base with two pads that follow the 6 degree tilt. It
-  attaches with two M3 screws from underneath into nuts inside the shell, so
+- **Stand.** A wide base with two pads that follow the 6 degree tilt. Each pad
+  has a dovetail tongue that slides into a groove in the shell's bottom, so
   you can remove it without opening the case.
 
-![Back of the case: access bay, vents and screw wells](renders/back_case.png)
+Small printed **snap pins** (`snap_pins.stl`) hold the panel and the Pi in
+place of screws.
+
+**Why it holds without screws.** The bezel locates the panel on all four sides,
+but it overlaps the LED face by only about 0.15 mm (see item 1 below). It
+cannot be the front stop. That is why the panel still needs pins into its own
+inserts. The Pi pins clip through the Pi's holes into the back wall. The stand
+holds with a dovetail and a small friction wedge, so nothing needs a thread.
+
+![Back of the case: access bay, vents and pin wells](renders/back_case.png)
 
 Features:
 
@@ -208,7 +220,7 @@ bonnet sits at Pi y = 26 to 56.66.
 | Parameter | Value | Source |
 |---|---|---|
 | Board | 65 x 30.66, 3 mm chamfers | Eagle .brd, fab print "65", "30.7" |
-| Holes | (3.5,3.5), (61.5,3.5), (3.5,26.5), (61.5,26.5). The top pair lines up with the Pi's top holes | .brd |
+| Holes | (3.5,3.5), (61.5,3.5), (3.5,26.5), (61.5,26.5), dia. 2.8. The top pair lines up with the Pi's top holes (dia. 2.7) | .brd |
 | `bonnet_jack` | x -1.27 to 12.93, y 7.95 to 16.95. Faces the **left** edge and sticks out 1.27 past it | .brd, fab print "12.4" |
 | `bonnet_jack_h`, `bonnet_jack_axis` | 11, 6.5 | Photo estimate. **U** |
 | `bonnet_term` | x 15.24 to 27.94; wires enter from the bottom edge | .brd, fab print "21.6" |
@@ -251,8 +263,36 @@ With the diffuser option the depth becomes 54.7 mm.
 
 ## Hardware list
 
-No soldering and no heat-set inserts. All screws go into the panel's own
-inserts, into printed holes, or into captive nuts.
+The default build has **no screws, nuts or other metal hardware**. The panel,
+the Pi and the stand are all held by printed parts. Nothing here is soldered.
+
+| Qty | Part | Where it goes |
+|---|---|---|
+| 1 | 16-pin (2x8) IDC ribbon, 75 to 190 mm long | The one that ships with the panel is fine in this range. Measure it and set `ribbon_len`. The model's direct route covers 75 to 108 mm and the U route about 140 to 190 mm. In between, use the direct route with a fuller S-fold (the pocket is 20 mm deep). If yours is longer, use a shorter 2x8 IDC ribbon. |
+| 1 | 5 V 4 A supply with a 5.5/2.1 mm barrel plug | Panel power, into the bonnet's jack |
+| 1 | USB-C power supply for the Pi (5 V 3 A) | Pi power. The bonnet does not power the Pi. |
+
+Optional:
+
+- **Rubber feet:** 4 adhesive feet, about 10 mm, under the stand.
+- **Diffuser:** one sheet of **196 x 100 mm** smoked or dark-grey transparent
+  acrylic, 3 mm (or 2 mm with `diffuser_t = 2`). Laser-cutting services and
+  plastics shops cut to size.
+
+Tools: tweezers, needle-nose pliers and calipers. A pencil or a screwdriver with
+a 6 mm shank pushes the panel pins home. You need **no screwdriver for the
+case**. You do need a small flat screwdriver for the bonnet's screw terminal
+(that screw is part of the bonnet, not the case) and for the bezel snap
+release.
+
+### Screw build
+
+Set `fasteners = "screws"` to get the old build: M3 and M2.5 screws, with the
+stand held by two M3 screws and nuts. Export it with
+`./export.sh -D 'fasteners="screws"'`. That skips `snap_pins.stl`, and the shell
+and stand come out with screw holes and nut slots instead of pin pockets and
+dovetails. All screws go into the panel's own inserts, into printed holes, or
+into captive nuts.
 
 | Qty | Part | Where it goes |
 |---|---|---|
@@ -260,18 +300,9 @@ inserts, into printed holes, or into captive nuts.
 | 2 | **M2.5 x 6 mm** pan-head **thread-forming screw for plastic** (sold as "M2.5 self-tapping"; ST2.5 also works) | The Pi's two lower holes, into the printed standoffs (2.2 mm pilot). An ordinary M2.5 x 6 machine screw also cuts its own thread in PLA. |
 | 2 | **M2.5 x 18 mm** pan-head machine screw | Through the bonnet's top holes, the printed spacers and the Pi's top holes, into the standoffs. 3.8 mm of thread bites the plastic; a 20 mm screw would poke out of the back. |
 | 2 | **M3 x 12 mm** pan or button head + 2 **M3 hex nuts** (DIN 934, 5.5 mm across flats) | Stand to shell. The nuts slide into slots inside the shell. |
-| 4 | Adhesive rubber feet, about 10 mm (optional) | Under the stand |
-| 1 | 16-pin (2x8) IDC ribbon, 75 to 190 mm long | The one that ships with the panel is fine in this range. Measure it and set `ribbon_len`. The model's direct route covers 75 to 108 mm and the U route about 140 to 190 mm. In between, use the direct route with a fuller S-fold (the pocket is 20 mm deep). If yours is longer, use a shorter 2x8 IDC ribbon. |
-| 1 | 5 V 4 A supply with a 5.5/2.1 mm barrel plug | Panel power, into the bonnet's jack |
-| 1 | USB-C power supply for the Pi (5 V 3 A) | Pi power. The bonnet does not power the Pi. |
 
-Optional:
-
-- **Diffuser:** one sheet of **196 x 100 mm** smoked or dark-grey transparent
-  acrylic, 3 mm (or 2 mm with `diffuser_t = 2`). Laser-cutting services and
-  plastics shops cut to size.
-- **Two-panel build:** 2 x M3 x 16 + 2 nuts for the shell joint, 4 more
-  M3 x 8 for the second panel, and the 4 printed pins.
+Two-panel screw build: add 2 x M3 x 16 + 2 nuts for the shell joint, and 4 more
+M3 x 8 for the second panel.
 
 **Where to buy:**
 
@@ -284,10 +315,9 @@ Optional:
 - **Local hardware store:** M3 x 8, M3 x 12 and M3 nuts are common in the
   metric drawer. M2.5 is rarer.
 
-Tools: Phillips #1 (or 2 mm hex for button heads) with a shank of **6 mm or
-less** that is at least 35 mm long, to reach down the 7 mm screw wells. A
-magnetic tip helps. You also need a small flat screwdriver for the screw
-terminal and the snap release, and calipers.
+Screw tools: Phillips #1 (or 2 mm hex for button heads) with a shank of **6 mm
+or less** that is at least 35 mm long, to reach down the 7 mm screw wells. A
+magnetic tip helps.
 
 ## Print guide
 
@@ -305,11 +335,12 @@ The STLs are already in print orientation, so don't rotate them.
 | Part | Orientation | Supports | Infill | Time* | Filament* |
 |---|---|---|---|---|---|
 | `bezel.stl` | Front face down. The face gets the bed texture: textured PEI gives a matte finish that hides fingerprints. | None. The opening chamfer is 45 degrees, the tongue ledge is about 51 degrees, and the snap bumps have about 51 degree catch faces. | 15% | 1 h 24 m | 38 g / 12.8 m |
-| `shell.stl` | Back face down, open front up | None. The four screw wells end in 7 mm round bridges with two "bridge trick" layers. If your slicer's auto-support paints anything inside the wells, block it. The other holes that run horizontally in print are teardrops or short flat bridges. | 15% | 5 h 36 m | 82 g / 27.6 m |
-| `stand.stl` | Base down | None. The two counterbores end in 6.6 mm bridges. | 15% | 2 h 46 m | 67 g / 22.4 m |
+| `shell.stl` | Back face down, open front up | None. The four pin wells end in 7 mm round bridges with two "bridge trick" layers. The Pi pin pockets in the back wall also get two bridge layers. The dovetail grooves close at the stop with a short bridge. If your slicer's auto-support paints anything inside the wells, block it. The other holes that run horizontally in print are teardrops or short flat bridges. | 15% | 5 h 27 m | 80 g / 26.8 m |
+| `stand.stl` | Base down | None. The tongue flanks are 25 degrees from vertical. | 15% | 2 h 49 m | 68 g / 22.9 m |
 | `spacers.stl` | Standing up (2 pieces) | None | 100% | 6 m | 0.5 g |
-| `coupon.stl` | As exported (4 pieces) | None | 15% | 13 m | 3.4 g |
-| **Total** (bezel + shell + stand + spacers) | | | | **about 10 h** | **about 190 g** |
+| `snap_pins.stl` | As exported, lying flat (11 pieces) | None, no brim | 100% | 15 m | 1 g / 0.3 m |
+| `coupon.stl` | As exported (5 pieces and 2 test pins) | None | 15% | 18 m | 5 g |
+| **Total** (bezel + shell + stand + spacers + pins) | | | | **about 10 h** | **about 190 g**, plus about 1 g of pins |
 
 \* Estimated with PrusaSlicer 2.7 at MK4 / P1S-class speeds (80 to 200 mm/s,
 3000 to 5000 mm/s² acceleration). Bambu Studio's standard profile is in the
@@ -317,8 +348,19 @@ same range or a little faster. Older bed-slingers at 50 to 60 mm/s take 1.5 to
 2 times as long. Allow +-30%.
 
 Two-panel build: `bezel_left` and `bezel_right` take 1 h 10 m and 32 g each,
-`shell_left` and `shell_right` 5 h 38 m and 76 g each, and `stand_left` and
-`stand_right` 2 h 9 m and 56 g each.
+`shell_left` and `shell_right` 5 h 33 m and 75 g each, and `stand_left` and
+`stand_right` 2 h 11 m and 57 g each. `snap_pins.stl` in `stl/two_panel/` is
+1.26 cm³ (about 2 g, 30 min).
+
+Snap pins:
+
+- Print them lying flat, as exported. Use 100% infill.
+- **PETG** is better, since it is springier. PLA works.
+- Use a 0.2 mm layer, no supports and no brim.
+- Turn elephant-foot compensation on, or check that the slits are open.
+- Print the spares. The file has them: 4 panel pins plus 1, 2 short Pi pins
+  plus 1, and 2 long Pi pins plus 1. The two-panel file has 9 panel pins, 3
+  short, 3 long and 3 joint pins.
 
 Material:
 
@@ -326,7 +368,7 @@ Material:
   60 °C. After an hour at your usual brightness, touch the panel's back: if it
   is uncomfortably warm (above about 45 °C), print the shell in PETG.
 - Pick **PETG** if the ticker sits in a sunny window or a hot room. PETG also
-  makes the six snap-fits more forgiving. With PETG you may want
+  makes the six snap-fits more forgiving and the pins springier. With PETG you may want
   `fit_clear = 0.35`, since PETG prints slightly fat.
 
 Matte black filament gives the best LED contrast and hides light bleed at the
@@ -336,31 +378,45 @@ bezel edge.
 
 ![Test coupon](renders/coupon.png)
 
-`coupon.stl` (3 g, 13 minutes) checks the fits that are hardest to measure. It
-has four pieces:
+`coupon.stl` (5 g, 18 minutes) checks the fits that are hardest to measure. It
+has five pieces, plus one insert pin and one short Pi pin to test with:
 
 - **A: panel corner gauge.** A 3 mm plate (the same thickness as a post's
   floor) with two 4 mm walls at the panel outline.
   1. Lay the panel **face up** into the corner. It should drop in with a hair
      of play.
-  2. Drive an M3 x 8 up through the hole into the corner insert.
-     - If it pulls the panel tight, M3 x 8 is right.
-     - If it bottoms out before it clamps, use M3 x 6.
-     - If it barely catches, use M3 x 10.
+  2. Push an insert pin through the gauge hole into the corner insert. It
+     should grip.
+     - If it bottoms out, set `insert_pin_grip` lower. It must stay below
+       `panel_insert_depth` - 0.5; OpenSCAD warns if it doesn't.
   3. If the hole doesn't line up with the insert, measure the offset and fix
      `panel_mounts`. The four mounts are symmetric, so one corner tells you all
      four.
 - **B: bezel corner.** Set it on the panel's front corner.
   - The outer row and column of LEDs must be fully visible.
   - The outline should fit around the panel without forcing.
-- **C: Pi standoff.** Hold it under one of the Pi's holes and drive an
-  M2.5 x 6 through.
-  - It should bite firmly.
-  - If it strips easily, set `m25_tap_d = 2.1`. If it's very stiff or splits
-    the post, set 2.3.
-- **D: spacer.** It should slide over an M2.5 screw. With the bonnet pressed
-  fully onto the Pi, the gap between the boards should match its length
-  (10.8 mm). If not, set `bonnet_gap`.
+- **C: Pi standoff.** It has the same bore and barb pocket as the shell. Push
+  a short Pi pin through a Pi hole into it. It should click.
+  - If it is too stiff or too loose, change `pi_pin_barb` (bigger = tighter) or
+    `pi_pin_slit`.
+- **D: spacer.** Its 3.2 mm bore lets a pin's barb slide through. With the
+  bonnet pressed fully onto the Pi, the gap between the boards should match its
+  length (10.8 mm). If not, set `bonnet_gap`.
+- **E: dovetail.** A groove block and a tongue with the wedge end. Slide the
+  tongue into the groove. It should slide freely at first and lock over the
+  last few mm. If it jams, lower `dt_lock`. If it stays loose, raise it.
+
+With `fasteners = "screws"` the coupon has only A to D, with these tests
+instead:
+
+- **A:** drive an M3 x 8 up through the hole into the corner insert.
+  - If it pulls the panel tight, M3 x 8 is right.
+  - If it bottoms out before it clamps, use M3 x 6.
+  - If it barely catches, use M3 x 10.
+- **C:** hold it under one of the Pi's holes and drive an M2.5 x 6 through. It
+  should bite firmly. If it strips easily, set `m25_tap_d = 2.1`. If it's very
+  stiff or splits the post, set 2.3.
+- **D:** it should slide over an M2.5 screw.
 
 ## Assembly
 
@@ -378,17 +434,21 @@ Follow this order. Read it through once first.
 ### 2. Pi into the shell
 
 1. Lay the shell on its back with the open front facing up.
-2. If you use the stand, drop an **M3 nut** into each of the two slots at the
-   bottom inside the shell. The slots open toward you.
-3. Lower the Pi in with the **components facing up** (toward you):
+2. Lower the Pi in with the **components facing up** (toward you):
    - the microSD edge faces the large access bay;
    - the USB-C edge faces the bottom.
 
    The four standoffs line up with the Pi's holes.
-4. Drive two **M2.5 x 6** into the lower holes, next to the USB-C port.
-5. Drive two **M2.5 x 18** down through the bonnet's top holes, the spacers and
-   the Pi into the upper standoffs.
-6. Stop at "snug". These are threads in plastic.
+3. Push two **short Pi pins** through the Pi's lower holes, next to the USB-C
+   port, into the standoffs.
+4. Push two **long Pi pins** down through the bonnet's top holes, the spacers
+   and the Pi's top holes, into the upper standoffs.
+5. Each pin goes in from the front, like a screw. Its barb (3.3 mm) squeezes
+   through the hole and clicks into the pocket behind the standoff. The catch
+   face is sloped, so a 1.4 to 1.6 mm Pi PCB is clamped either way.
+
+To release a Pi pin, squeeze the barb's two prongs together in the pocket at the
+back of the case with tweezers, and push the pin out toward the front.
 
 ### 3. Ribbon to the panel's INPUT
 
@@ -429,8 +489,14 @@ Follow this order. Read it through once first.
    land on the panel's corner inserts.
 2. Check that no wire or ribbon is pinched under a post or against the Pi.
    The ribbon should lie flat along its path.
-3. With the shell's back now facing up, drive four **M3 x 8** down the
-   screwdriver wells into the inserts. Snug them in a cross pattern.
+3. With the shell's back now facing up, drop an **insert pin** down each of the
+   four screwdriver wells. The head (6 mm) sits on the post floor. Push each
+   one home with a pencil, a 6 mm screwdriver shank or similar. Its 3.0 mm
+   split end springs 4 mm into the insert and grips the thread.
+
+To remove an insert pin, pull it out with needle-nose pliers or tweezers. A
+slight twist helps. If a pin ever won't grip, an **M3 x 8** screw still fits
+the same post.
 
 ### 6. Bezel on
 
@@ -444,8 +510,13 @@ small flat screwdriver while you pull the bezel forward.
 
 ### 7. Stand and cables
 
-1. Set the case on the stand. Drive two **M3 x 12** up through the stand into
-   the nuts.
+1. Set the case on the front of the stand, slightly forward. Line the two
+   grooves in the shell's bottom up with the stand's tongues and slide the
+   case back until it stops. The grooves are open at the back and closed 18 mm
+   forward. The 6 degree tilt pushes the case toward the stop. The last 2 to
+   4 mm of each tongue are a 0.1 mm per side friction wedge, so the case stays
+   on when you carry it. To remove it, pull the case forward. You don't open
+   the case.
 2. Through the bay, push the barrel plug into the bonnet's jack. Snap its
    cable into the C-clip at the bay's edge.
 3. Push the USB-C plug up into the Pi. Press its cable into the slot in the
@@ -462,7 +533,7 @@ are the ones to measure before the full print.
 | **`panel_w`, `panel_h`** | 192, 96 | Measure the outer edge of the panel's plastic frame, across the LED face, at both ends and in the middle. Use the **largest** reading. |
 | **`panel_t`** | 15 | Lay the panel face down on a flat table. Put the caliper's depth rod on the **flat back mounting face**, the face the M3 inserts sit in (not on the connectors or the 2.7 mm pins), and measure down to the table. If the frame's back face isn't flat, use the surface around the insert holes. This sets where the bezel lands: too small and the bezel won't close; too big and the panel sits recessed. |
 | **`panel_mounts`** | (+-87, +-30) | First identify the **M3 inserts**: brass, threaded, usually 4 to 6 of them. Then measure **outside to outside** and **inside to inside** of the hole between two inserts in a row, and average to get the centre-to-centre distance. Halve it to get the coordinate. Do this in both directions. Also check from a panel edge to an insert's centre: edge to near side of the hole plus half the hole diameter. Use the coupon's piece A to confirm. |
-| **`panel_insert_depth`** | 5 | Push the caliper's depth rod into an insert until it stops. Screw length = 3 + this, rounded down to a stock length (6, 8 or 10). |
+| **`panel_insert_depth`** | 5 | Push the caliper's depth rod into an insert until it stops. `insert_pin_grip` must stay at least 0.5 mm below it. In the screw build, screw length = 3 + this, rounded down to a stock length (6, 8 or 10). |
 | `panel_pins`, `panel_pin_d`, `panel_pin_h` | (88,15), 2, 2.7 | Locating pins on the back: measure their positions as for the inserts, plus diameter and height. They only need to miss the posts and the bezel tongue. |
 | **`panel_idc_x`, `panel_idc_size`** | 74, 9 x 26 | Centre of each 16-pin connector's plastic box from the panel centre, plus the box's outer width and length. |
 | **`panel_idc_proud`** | 9 | With the **ribbon plugged in**, from the back mounting face to the top of the plug and ribbon. |
@@ -471,7 +542,7 @@ are the ones to measure before the full print.
 | `pi_pcb_t` | 1.6 | Board thickness at an edge away from parts. |
 | `pi_sd_y` | 28 | Pi on its back, SD slot facing you: from the board's bottom edge (the USB-C / HDMI edge) to the centre of the card slot. |
 | `pi_sd_proud` | 2.5 | With a card fully seated, how far it sticks out past the board edge. |
-| **`bonnet_gap`** | 11.0 | Bonnet pressed fully onto the Pi: gap between the Pi's top surface and the bonnet's underside, at the corner holes. Sets the spacer length and the M2.5 x 18 screw. |
+| **`bonnet_gap`** | 11.0 | Bonnet pressed fully onto the Pi: gap between the Pi's top surface and the bonnet's underside, at the corner holes. Sets the spacer length and the long Pi pin's grip (17.2 mm). In the screw build it sets the M2.5 x 18 screw. |
 | `bonnet_jack_h`, `bonnet_jack_axis` | 11, 6.5 | Jack height above the bonnet's top surface, and the height of the barrel's centre. |
 | **`bonnet_term_h`** | 11.5 | Screw terminal height above the bonnet's top surface. Pre-Sept-2025 boards may be taller. |
 | `bonnet_hub_h`, `idc_plug_proud` | 9, 3 | HUB75 shroud height above the bonnet. With the ribbon plugged in, how far the plug sticks out above the shroud. |
@@ -494,15 +565,25 @@ Edit these at the top of `enclosure.scad`, or pass them with `-D` to the scripts
 
   ![With a smoked diffuser](renders/front_diffuser.png)
 
+- **Fasteners.** `fasteners = "printed"` is the default: snap pins and
+  dovetails, no metal hardware. `fasteners = "screws"` gives the screw build,
+  for example `./export.sh -D 'fasteners="screws"'`. Its parts list is under
+  [Screw build](#screw-build).
+
 - **Two panels (128x32).** `panels = 2`. The case is 388.6 mm wide, so
   `./export.sh -D panels=2` writes split parts to `stl/two_panel/`:
   - left and right bezel and shell halves, each 194.3 mm, which fit a 250 mm
     bed;
   - two independent stand feet;
-  - 4 alignment pins.
+  - 4 alignment pins;
+  - `snap_pins.stl`: 9 panel pins, 3 short and 3 long Pi pins, and 3 joint
+    pins (1.26 cm³).
 
-  The shell halves join with the pins and an M3 x 16 bolt with a captive nut in
-  blocks at the top and bottom. The bezel halves are located by the shell and
+  The shell halves join with the alignment pins and a printed joint pin in
+  blocks at the top and bottom. The joint pin has a 3.0 mm shank and a 3.9 mm
+  barb. Its head sits in the 6.2 mm recess and the barb catches in the nut
+  trap, in place of an M3 x 16 bolt and a nut (which the screw build still
+  uses). The bezel halves are located by the shell and
   held by their own snaps. The Pi stays behind the left panel. Panel 1's OUTPUT
   is reachable through the bay. Check the jumper ribbon to panel 2 when you get
   there.
@@ -510,7 +591,8 @@ Edit these at the top of `enclosure.scad`, or pass them with `-D` to the scripts
   ![Two-panel version](renders/two_panel.png)
 
 - **Wall mount.** `wall_mount = true` adds two keyhole slots, with closed
-  pockets behind them, to the back wall. It is off by default because you chose
+  pockets behind them, to the back wall. The case hangs on two wall screws or
+  nails. Those go in the wall, not the case. It is off by default because you chose
   the desk stand. `desk_stand = false` removes the stand bosses.
 - **Tilt.** `stand_tilt` (default 6).
 - **Bed.** `bed_x`, `bed_y`. Parts are split automatically when the case is
@@ -519,13 +601,13 @@ Edit these at the top of `enclosure.scad`, or pass them with `-D` to the scripts
 ## Collision checks
 
 `./check.sh` uses CGAL to compute the actual overlap volume between each pair
-of models: case parts, Pi + bonnet + screws, the LED panel with its plugs, the
+of models: case parts, Pi + bonnet + pins, the LED panel with its plugs, the
 barrel and USB-C plugs and cables, the ribbon's keep-out path, and the power
 lead. Results for the default build:
 
 | Check | Result |
 |---|---|
-| shell vs Pi stack | touching only (standoffs) |
+| shell vs Pi stack | touching only (standoffs, pins) |
 | shell vs panel | touching only (posts on the back face) |
 | bezel vs panel | no contact (0.3 mm all round, 0.3 mm in front) |
 | Pi stack vs panel | no contact (2 mm) |
@@ -534,9 +616,11 @@ lead. Results for the default build:
 | shell, Pi, panel, power lead vs ribbon | no contact (both routes, `ribbon_len` 90 to 185) |
 | clips vs everything else | no contact |
 | bezel vs shell | touching only (butt joint) |
-| stand vs case | touching only |
+| stand vs case | no contact |
 
-The same checks pass with `use_diffuser = true` and with `panels = 2`. The clips
+The same checks pass with `use_diffuser = true`, with `panels = 2` and with
+`fasteners = "screws"`. The stand check uses the tongue without its wedge,
+since the wedge is a deliberate press fit. The clips
 grip their cables by design: the barrel clip is 0.2 mm under the cable diameter,
 and the USB-C slot and gutter clip are snug. These checks therefore use the
 shell without its clips (`check_clips_hw` covers the clips against everything
@@ -556,6 +640,7 @@ image.
 cd enclosure
 ./export.sh                      # STLs into stl/ (binary, print orientation)
 OUT=stl/two_panel ./export.sh -D panels=2
+./export.sh -D 'fasteners="screws"'  # the screw build (no snap_pins.stl)
 ./render.sh                      # PNGs into renders/
 ./check.sh                       # collision checks
 openscad enclosure.scad          # GUI with the customizer
