@@ -14,6 +14,7 @@ OUT ?= snapshots/fixtures-$(shell date +%Y-%m-%d)
 
 .DEFAULT_GOAL := help
 .PHONY: help install dev dev-replay snapshot site logos fixtures test lint format \
+	enclosure enclosure-check \
 	check-config profile deploy logs
 
 help: ## List available targets
@@ -50,6 +51,14 @@ lint: ## Check lint and formatting (ruff)
 format: ## Apply ruff fixes and formatting
 	$(PY) -m ruff check --fix .
 	$(PY) -m ruff format .
+
+enclosure: ## Rebuild the enclosure STLs and preview PNGs (needs openscad)
+	enclosure/export.sh
+	OUT=stl/two_panel enclosure/export.sh -D panels=2
+	enclosure/render.sh
+
+enclosure-check: ## Run the enclosure collision checks (needs openscad)
+	enclosure/check.sh
 
 check-config: ## Validate config.yaml and exit
 	$(PY) -m sportsticker run --config config.yaml --check-config

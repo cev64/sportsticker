@@ -331,7 +331,7 @@ src/sportsticker/
   fonts/        BDF fonts and their license
 tests/          pytest suite, including tests/fixtures/ replay data
 deploy/         ticker.service and install.sh for the Pi
-enclosure/      3D-printed case (designed separately)
+enclosure/      3D-printed case: OpenSCAD model, STLs, renders, print and assembly guide
 ```
 
 ## Licenses
