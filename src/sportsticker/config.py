@@ -19,6 +19,7 @@ from .models import LEAGUES
 
 LAYOUTS = ("a", "b", "c", "text")
 LOGO_VARIANTS = ("auto", "logo", "dark")
+TRANSITION_STYLES = ("push", "split", "wipe", "fade")
 MIN_POLL_SECONDS = 30
 
 # RGBMatrixOptions attributes we pass through, with the type each must have.
@@ -61,7 +62,8 @@ class DisplayConfig:
     favorite_live_seconds: float = 10.0
     score_flash_seconds: float = 4.0
     show_situation: bool = True
-    transitions: bool = False
+    transitions: bool = True
+    transition_style: str = "push"
     transition_ms: int = 400
     animation_fps: int = 30
 
@@ -248,7 +250,8 @@ def parse_config(raw: dict | None) -> Config:
         favorite_live_seconds=r.num(d, "favorite_live_seconds", 10, w, lo=1, hi=600),
         score_flash_seconds=r.num(d, "score_flash_seconds", 4, w, lo=0, hi=60),
         show_situation=r.boolean(d, "show_situation", True, w),
-        transitions=r.boolean(d, "transitions", False, w),
+        transitions=r.boolean(d, "transitions", True, w),
+        transition_style=r.choice(d, "transition_style", "push", TRANSITION_STYLES, w),
         transition_ms=r.num(d, "transition_ms", 400, w, lo=50, hi=5000, integer=True),
         animation_fps=r.num(d, "animation_fps", 30, w, lo=1, hi=120, integer=True),
     )
