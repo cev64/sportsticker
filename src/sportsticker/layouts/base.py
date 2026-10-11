@@ -13,6 +13,7 @@ from ..bdf import BDFFont, load_font
 from ..colors import DIM, GRAY, RED, RGB, WHITE, YELLOW, team_color
 from ..models import LEAGUES, Competitor, Game, Team
 from ..status import Status, game_status
+from .glyphs import league_glyph
 
 W, H = 64, 32
 
@@ -181,6 +182,30 @@ def draw_team_mark(
 def league_label(game: Game) -> str:
     lg = LEAGUES.get(game.league)
     return lg.label if lg else game.league.upper()
+
+
+def league_mark_width(game: Game) -> int:
+    """Width of what draw_league_mark draws (glyph, else tom-thumb label)."""
+    g = league_glyph(game)
+    return g[0].width if g else ink_width(font("tom-thumb"), league_label(game))
+
+
+def draw_league_mark(img: Image.Image, game: Game, x: int, y: int) -> None:
+    """Sport glyph (or the league label if there is none) with its top-left at (x, y).
+
+    Both are 5 rows tall, so they can swap without moving anything else.
+    """
+    g = league_glyph(game)
+    if g:
+        img.paste(g[0], (x, y), g[1])
+    else:
+        tf = font("tom-thumb")
+        left, _ = tf.ink_bounds(league_label(game))
+        tf.draw_cap(img, x - left, y, league_label(game), LEAGUE_COLOR)
+
+
+def draw_league_mark_centered(img: Image.Image, game: Game, cx: float, y: int) -> None:
+    draw_league_mark(img, game, round(cx - league_mark_width(game) / 2), y)
 
 
 __all__ = [

@@ -5,7 +5,7 @@ B:                                       C:
  │ away │   Q3   │ home │                 │ away │  27       │  Q3   │
  │ logo │  4:12  │ logo │                 ├──────┼───────────┤ 4:12  │
  │      │  3&7   │      │                 │ home │  24       │  3&7  │
- │  27  │  NFL   │  24  │                 └──────┴───────────┴───────┘
+ │  27  │  (ball)│  24  │                 └──────┴───────────┴───────┘
  └──────┴────────┴──────┘
 """
 
@@ -16,19 +16,17 @@ from PIL import Image
 from ..models import Game
 from .base import (
     DETAIL_COLOR,
-    LEAGUE_COLOR,
     NO_HIGHLIGHT,
     Highlight,
     RenderContext,
     blank,
     draw_centered,
     draw_dot,
+    draw_league_mark_centered,
     draw_right,
     draw_team_mark,
     fit_font,
-    font,
     has_possession,
-    league_label,
     possession_color,
     score_colors,
     score_text,
@@ -94,8 +92,7 @@ def render_b(game: Game, ctx: RenderContext, hl: Highlight = NO_HIGHLIGHT) -> Im
                 dot_y = box[3] - 3
             draw_dot(img, dot_x, dot_y, possession_color(game))
     _status_stack(img, game, ctx, box_w, 64 - box_w, 0, 21)
-    tf = font("tom-thumb")
-    draw_centered(img, tf, 31.5, 25, league_label(game), LEAGUE_COLOR)
+    draw_league_mark_centered(img, game, 31.5, 25)
     return img
 
 
@@ -125,6 +122,5 @@ def render_c(game: Game, ctx: RenderContext, hl: Highlight = NO_HIGHLIGHT) -> Im
     # thin divider and status column
     img.paste((40, 40, 40), (col_x - 1, 2, col_x, 30))
     _status_stack(img, game, ctx, col_x, 64, 0, 25)
-    tf = font("tom-thumb")
-    draw_centered(img, tf, (col_x + 63) / 2, 27, league_label(game), LEAGUE_COLOR)
+    draw_league_mark_centered(img, game, (col_x + 63) / 2, 27)
     return img

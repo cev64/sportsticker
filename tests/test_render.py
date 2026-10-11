@@ -12,6 +12,7 @@ from sportsticker.backend import HeadlessBackend
 from sportsticker.config import TRANSITION_STYLES, load_config
 from sportsticker.espn import parse_scoreboard
 from sportsticker.layouts import LAYOUTS, Highlight, RenderContext, render_clock
+from sportsticker.layouts.glyphs import PALETTE, league_glyph
 from sportsticker.models import LEAGUES, Competitor, Game, Situation, Team
 from sportsticker.poller import ScoreState
 from sportsticker.slides import ScoreTracker, Slide, build_playlist, order_games
@@ -256,3 +257,27 @@ def test_snapshot_replay(tmp_path, cfg):
     first = m["sections"][0]["items"][0]
     assert (tmp_path / first["raw"]).exists()
     assert len(first["pixels"]) == 64 * 32 * 6
+
+
+def test_every_league_has_a_sport_glyph_and_college_gets_a_c():
+    for key in LEAGUES:
+        rgb, mask = league_glyph(mk(league=key))
+        assert rgb.height == 5 and mask.getbbox() is not None, key
+    pro = league_glyph(mk(league="nfl"))[0]
+    college = league_glyph(mk(league="ncaaf"))[0]
+    # "C" (3 wide) plus a 1-px gap sits to the left of the same ball.
+    assert college.width == pro.width + 4
+    assert college.crop((4, 0, college.width, 5)).tobytes() == pro.tobytes()
+
+
+@pytest.mark.parametrize("layout", ["a", "b", "c", "text"])
+def test_layouts_show_the_sport_glyph_instead_of_the_league_name(layout):
+    ctx = RenderContext(TZ, NOW)
+    final = mk(state="post", detail="Final")
+    img = LAYOUTS[layout](final, ctx, Highlight())
+    leather = PALETTE["B"]
+    assert any(img.getpixel((x, y)) == leather for x in range(64) for y in range(32))
+    # Basketball games show the basketball instead.
+    hoops = LAYOUTS[layout](replace(final, league="nba"), ctx, Highlight())
+    assert not any(hoops.getpixel((x, y)) == leather for x in range(64) for y in range(32))
+    assert any(hoops.getpixel((x, y)) == PALETTE["O"] for x in range(64) for y in range(32))
