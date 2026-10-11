@@ -23,7 +23,7 @@ PROJ=o png section2  section2 "400,26,4,0,26,4"           1400,1100 -D show_leds
 png side      assembly "620,40,90,0,40,60"         1600,1000 "${EXTRA[@]}"
 png front_diffuser assembly "-330,-430,300,0,25,60" 1600,1000 -D use_diffuser=true "${EXTRA[@]}"
 png two_panel assembly "-420,-620,380,0,25,60"     1600,1000 -D panels=2 "${EXTRA[@]}"
-png coupon    coupon   "10,-70,110,20,26,0"        1200,900  "${EXTRA[@]}"
+png coupon    coupon   "28,-95,140,34,20,0"        1200,900  "${EXTRA[@]}"
 # Gallery views in renders/views/.
 mkdir -p renders/views
 png views/01_eye_level_front assembly "0,-520,95,0,30,70"     1600,1100 "${EXTRA[@]}"
