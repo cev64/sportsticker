@@ -242,26 +242,33 @@ spacer_od = 5.5;
 // Every pin prints lying on a flat (thickness = pin_flat x shank), split in
 // the bed plane so its two prongs flex sideways along the layers.
 pin_flat = 0.75;
+// Heads are [diameter, thickness, bar]: a disc with a flat, plus a bar of
+// that length across the split, so the head covers the hole on every side.
 // Pi + bonnet pins, pushed in from the front: shank, barb, slit, head.
-// The barb squeezes through the Pi's 2.7 mm hole and snaps into a pocket in
-// the back of the shell.
+// The barb squeezes through the Pi's 2.7 mm hole (the bonnet's are 2.8) and
+// snaps into a pocket in the back of the shell, catching on a step 0.4 mm
+// up the standoff bore. Print these in PETG: the short pin's prongs bend ~2%.
 pi_pin_d = 2.4;
-pi_pin_barb = 3.3;
-pi_pin_slit = 0.8;
-pi_pin_head = [4.5, 1.6];   // diameter, thickness
-pi_pin_bore = 2.75;         // standoff bore
-pi_pin_pocket = 5.6;        // barb pocket in the back wall (tweezers fit here)
-// Panel pins, pushed down the screwdriver wells: the split end springs into
-// the panel's M3 insert (thread minor diameter 2.46) and grips the thread.
-insert_pin_d = 3.0;
+pi_pin_barb = 3.2;
+pi_pin_slit = 0.9;
+pi_pin_head = [4.5, 1.6, 6.0];  // the bar fits the Pi's 6 mm pad
+pi_pin_bore = 2.75;             // standoff bore
+pi_pin_pocket = 5.6;            // barb pocket in the back wall (tweezers fit here)
+// Panel pins, pushed down the screwdriver wells. A thin neck makes the split
+// end a long, soft spring; its bulge springs into the panel's M3 insert
+// (thread minor diameter 2.46 to 2.60) and sits in the thread. A stem up the
+// well lets you push the pin in and pull it back out.
+insert_pin_d = 2.3;             // neck
+insert_pin_bulge = 2.8;
 insert_pin_slit = 1.0;
-insert_pin_grip = 4.0;      // length inside the insert (keep < panel_insert_depth)
-insert_pin_head = [6.0, 1.6];
-// Joint pin for the split shell (2-panel build): barb snaps into the nut trap.
+insert_pin_grip = 4.0;          // length inside the insert (keep < panel_insert_depth)
+insert_pin_head = [6.0, 1.6, 6.6];
+// Joint pin for the split shell (2-panel build): barb snaps into the nut trap
+// with a square catch, so the joint stays shut when you carry the ticker.
 joint_pin_d = 3.0;
-joint_pin_barb = 3.9;
+joint_pin_barb = 4.2;
 joint_pin_slit = 1.0;
-joint_pin_head = [6.0, 2.0];
+joint_pin_head = [6.0, 2.0, 6.0];
 // Stand dovetails: a tongue on each stand pad slides into a groove in the
 // shell's bottom from the back. Neck width at the case's bottom face, height,
 // flank angle from vertical, groove length from the back face.
@@ -362,8 +369,14 @@ stand_screw_len = stand_screw_floor + wall + 6;
 // catches on. The Pi pins catch on the end of the standoff, in a pocket in
 // the back wall; the panel pins grip inside the insert past the post floor.
 screwless = fasteners == "printed";
-pi_pin_short = pi_pcb_t + pi_underside;
-pi_pin_long = bonnet_top_h + pi_pcb_t + pi_underside;
+pi_pin_short = pi_pcb_t + pi_underside - 0.4;
+pi_pin_long = bonnet_top_h + pi_pcb_t + pi_underside - 0.4;
+// The Pi pin's catch face slopes over [S - 0.5, S + 0.2]. It meets the bore
+// edge about 0.2 mm before S, so it clamps any stack from S - 0.2 to S + 0.2:
+// a 1.4 or a 1.6 mm Pi PCB, or a header that seats 0.2 mm off.
+pi_pin_catch = [-0.5, 0.2];
+// Panel pin stem: from the head up the well to 4 mm below the back face.
+insert_pin_stem = depth - (y_panel_back + post_floor) - insert_pin_head[1] - 4;
 joint_pin_len = 14;   // split block: head recess floor to nut trap floor
 
 // Stand dovetail: groove top (Z) and how far each flank leans out.
@@ -434,36 +447,50 @@ module bridge_layers(xz, y_ceiling, small, big) {
 }
 
 // Printed snap pin, axis +Z, head underside at z = 0. S is the grip length
-// (head underside to the ledge the barb catches on). With grip > 0 the pin
-// has no barb: its split end is a spring that grips a threaded hole from
-// z = S to S + grip. The pin is cut to a flat on -Y (it prints lying on it)
-// and split in the YZ plane, so the prongs flex along X, in the bed plane.
-// The barb's catch face slopes from S - 0.3 to S + 0.2: it latches with some
-// preload over that whole range (a Pi PCB is 1.4 to 1.6 mm).
-module snap_pin(S, d, barb, slit, head, grip = 0) {
+// (head underside to the ledge the barb catches on); the catch face slopes
+// from S + catch[0] to S + catch[1]. With bulge > 0 the pin has no barb: it
+// is a spring that grips a threaded hole from S to S + grip. The pin is cut to
+// a flat on -Y (it prints lying on it) and split in the YZ plane, so the
+// prongs flex along X, in the bed plane. The slit's root is round.
+module snap_pin(S, d, barb, slit, head, catch = [0, 0.1], grip = 0, bulge = 0, stem = 0) {
     t = pin_flat * d;
     tip = 1.6;
-    z_tip = grip > 0 ? S + grip : S + 0.2 + tip;
+    z_tip = bulge > 0 ? S + grip : S + catch[1] + tip;
     hd = head[0] / 2;
-    prof = grip > 0
+    prof = bulge > 0
         ? [[0, -head[1]], [hd, -head[1]], [hd, -0.3], [hd - 0.3, 0], [d / 2, 0],
-           [d / 2, z_tip - 0.8], [d / 2 - 0.5, z_tip], [0, z_tip]]
+           [d / 2, z_tip - 2.7], [bulge / 2, z_tip - 2.2], [bulge / 2, z_tip - 1.0],
+           [d / 2 - 0.3, z_tip], [0, z_tip]]
         : [[0, -head[1]], [hd, -head[1]], [hd, -0.3], [hd - 0.3, 0], [d / 2, 0],
-           [d / 2, S - 0.3], [barb / 2, S + 0.2], [d / 2 - 0.2, z_tip], [0, z_tip]];
-    slit0 = max(1.0, S - 6);
+           [d / 2, S + catch[0]], [barb / 2, S + catch[1]], [d / 2 - 0.2, z_tip], [0, z_tip]];
+    slit0 = bulge > 0 ? 0.3 : max(0.3, S - 7);
     difference() {
-        intersection() {
-            rotate_extrude($fn = 40) polygon(prof);
-            union() {
-                translate([-20, -t / 2, -eps]) cube([40, t, z_tip + 1]);
-                translate([-20, -t / 2, -head[1] - 1]) cube([40, 20, head[1] + 1]);
+        union() {
+            intersection() {
+                rotate_extrude($fn = 40) polygon(prof);
+                union() {
+                    translate([-20, -t / 2, -eps]) cube([40, t, z_tip + 1]);
+                    translate([-20, -t / 2, -head[1] - 1]) cube([40, 20, head[1] + 1]);
+                }
             }
+            // Bar across the head, and the stem behind it.
+            intersection() {
+                translate([0, 0, -head[1]]) cylinder(d = head[2], h = head[1] - 0.3, $fn = 40);
+                translate([-20, -t / 2, -head[1]]) cube([40, t, head[1]]);
+            }
+            if (stem > 0) translate([-1.5, -t / 2, -head[1] - stem]) cube([3, t, stem + eps]);
         }
         translate([-slit / 2, -20, slit0]) cube([slit, 40, z_tip]);
+        translate([0, 0, slit0]) rotate([90, 0, 0]) cylinder(d = slit, h = 40, center = true, $fn = 16);
     }
 }
-module pi_pin(long) { snap_pin(long ? pi_pin_long : pi_pin_short, pi_pin_d, pi_pin_barb, pi_pin_slit, pi_pin_head); }
-module insert_pin() { snap_pin(post_floor, insert_pin_d, 0, insert_pin_slit, insert_pin_head, insert_pin_grip); }
+module pi_pin(long) {
+    snap_pin(long ? pi_pin_long : pi_pin_short, pi_pin_d, pi_pin_barb, pi_pin_slit, pi_pin_head, pi_pin_catch);
+}
+module insert_pin() {
+    snap_pin(post_floor, insert_pin_d, 0, insert_pin_slit, insert_pin_head,
+             grip = insert_pin_grip, bulge = insert_pin_bulge, stem = insert_pin_stem);
+}
 module joint_pin() { snap_pin(joint_pin_len, joint_pin_d, joint_pin_barb, joint_pin_slit, joint_pin_head); }
 
 // Stand dovetail profile in the XZ plane at X = 0: neck at the case's bottom
@@ -648,7 +675,15 @@ module panel_post_holes(xz) {
 }
 
 module pi_standoffs() {
-    for (h = pi_holes) ycyl(pi_standoff_d, y_pi_bot, y_back_in + eps, P(h));
+    for (h = pi_holes) {
+        ycyl(pi_standoff_d, y_pi_bot, y_back_in + eps, P(h));
+        // Flared foot: the barb pocket is nearly as wide as the standoff, so
+        // the foot carries it onto the back wall (prints as a fillet).
+        if (screwless) hull() {
+            ycyl(pi_standoff_d, y_back_in - 1.8, y_back_in - 1.8 + eps, P(h));
+            ycyl(pi_pin_pocket + 2 * min_wall, y_back_in - 0.3, y_back_in + eps, P(h));
+        }
+    }
 }
 
 module pi_standoff_holes() {
@@ -658,7 +693,8 @@ module pi_standoff_holes() {
             // barb catches on the end of the standoff.
             ycyl(pi_pin_bore, y_pi_bot - 1, depth + 1, P(h));
             ycyl(pi_pin_pocket, y_back_in, depth + 1, P(h));
-            bridge_layers(P(h), y_back_in, pi_pin_bore, pi_pin_pocket);
+            // The barb catches on the step at the top of these layers.
+            bridge_layers(P(h), y_back_in, pi_pin_barb + 0.4, pi_pin_pocket);
         } else
             ycyl(m25_tap_d, y_pi_bot - 1, depth + 1, P(h));
     }
@@ -678,7 +714,15 @@ module stand_bosses() {
 }
 module stand_boss_holes() {
     if (screwless) for (x = [-stand_pad_x, stand_pad_x])
-        translate([x, 0, 0]) xz_extrude(depth - dt_len, depth + 1) dt_profile(0);
+        translate([x, 0, 0]) {
+            xz_extrude(depth - dt_len, depth + 1) dt_profile(0);
+            // 0.6 mm chamfer at the mouth: it prints on the bed, where
+            // elephant foot would otherwise pinch the groove.
+            for (k = [0, 1]) hull() {
+                xz_extrude(depth - 0.6, depth - 0.6 + eps) dt_profile(0, 0, 1, k);
+                xz_extrude(depth, depth + 1) dt_profile(0.6, -0.6, 1, k);
+            }
+        }
     else for (x = [-stand_pad_x, stand_pad_x]) {
         translate([x, stand_screw_y(), -out_h / 2 - 1]) teardrop_z(m3_clear_d, wall + stand_boss[2] + 2);
         // Nut slot, open toward the front of the case.
@@ -919,10 +963,10 @@ module pin_flat_down(d) { translate([0, 0, pin_flat * d / 2]) rotate([90, 0, 0])
 module snap_pins() {
     n_ins = 4 * panels + 1;
     for (i = [0 : n_ins - 1]) translate([i * 8, 0, 0]) pin_flat_down(insert_pin_d) insert_pin();
-    for (i = [0 : 2]) translate([i * 7, -16, 0]) pin_flat_down(pi_pin_d) pi_pin(false);
-    for (i = [0 : 2]) translate([24 + i * 7, -16, 0]) pin_flat_down(pi_pin_d) pi_pin(true);
+    for (i = [0 : 2]) translate([i * 8, -16, 0]) pin_flat_down(pi_pin_d) pi_pin(false);
+    for (i = [0 : 2]) translate([26 + i * 8, -16, 0]) pin_flat_down(pi_pin_d) pi_pin(true);
     if (panels > 1)
-        for (i = [0 : 2]) translate([i * 8, -42, 0]) pin_flat_down(joint_pin_d) joint_pin();
+        for (i = [0 : 2]) translate([52 + i * 8, -16, 0]) pin_flat_down(joint_pin_d) joint_pin();
 }
 
 // Alignment pins for a split shell (2-panel build, print 4).
@@ -973,13 +1017,18 @@ module coupon_standoff() {
         union() {
             translate([-7, -7, 0]) cube([14, 14, back_t]);
             cylinder(d = pi_standoff_d, h = back_t + pi_underside);
+            if (screwless) hull() {
+                translate([0, 0, back_t - eps]) cylinder(d = pi_pin_pocket + 2 * min_wall, h = 0.3 + eps);
+                translate([0, 0, back_t + 1.8]) cylinder(d = pi_standoff_d, h = eps);
+            }
         }
         if (screwless) {
             // Same bore, barb pocket and bridge layers as the shell.
             translate([0, 0, -1]) cylinder(d = pi_pin_bore, h = 20);
             translate([0, 0, -1]) cylinder(d = pi_pin_pocket, h = back_t + 1);
-            translate([-pi_pin_bore / 2, -pi_pin_pocket / 2, back_t - eps]) cube([pi_pin_bore, pi_pin_pocket, 0.2 + eps]);
-            translate([-pi_pin_bore / 2, -pi_pin_bore / 2, back_t + 0.2 - eps]) cube([pi_pin_bore, pi_pin_bore, 0.2 + eps]);
+            st = pi_pin_barb + 0.4;
+            translate([-st / 2, -pi_pin_pocket / 2, back_t - eps]) cube([st, pi_pin_pocket, 0.2 + eps]);
+            translate([-st / 2, -st / 2, back_t + 0.2 - eps]) cube([st, st, 0.2 + eps]);
         } else
             translate([0, 0, -1]) cylinder(d = m25_tap_d, h = 20);
     }
@@ -995,7 +1044,7 @@ module coupon_dovetail() {
         dt_profile(0);
     }
     // Tongue: 12 mm long on a 3 mm plate, the last 4 mm widening into the wedge.
-    translate([bw / 2 + 12, 14, 0]) {
+    translate([0, -6, 0]) {
         translate([-8, -12, 0]) cube([16, 12, 3]);
         translate([0, 0, 3]) rotate([90, 0, 0]) {
             linear_extrude(8) translate([0, out_h / 2]) dt_profile(-pin_clear, pin_clear, 0.5);
@@ -1017,7 +1066,7 @@ module coupon() {
     translate([34, 24, 0]) spacer();
     if (screwless) {
         // E, and one panel pin and one short Pi pin to test with.
-        translate([62, 6, 0]) coupon_dovetail();
+        translate([58, 2, 0]) coupon_dovetail();
         translate([48, 40, 0]) pin_flat_down(insert_pin_d) insert_pin();
         translate([56, 40, 0]) pin_flat_down(pi_pin_d) pi_pin(false);
     }
@@ -1114,8 +1163,8 @@ module pi_screws() {
         xz = P(pi_holes[i]);
         y_head = long ? y_bonnet_top : y_pi_top;
         ycyl(pi_pin_head[0], y_head - pi_pin_head[1], y_head, xz);
-        ycyl(pi_pin_d, y_head - eps, y_back_in + 0.2, xz);
-        ycyl(pi_pin_barb, y_back_in + 0.2, y_back_in + 1.0, xz);
+        ycyl(pi_pin_d, y_head - eps, y_back_in - 0.2, xz);
+        ycyl(pi_pin_barb, y_back_in - 0.2, y_back_in + 1.0, xz);
     }
     else color([0.7, 0.7, 0.72]) {
         for (i = [0, 1]) ycyl(2.0, y_pi_top - 1.8, y_pi_top - 1.8 + 6, P(pi_holes[i]));
@@ -1131,9 +1180,11 @@ module panel_screws() {
     // Printed: head on the post floor, split end gripping the insert.
     if (screwless) color([0.35, 0.35, 0.38]) for (m = module_x, h = panel_mounts) {
         xz = [m + h[0], h[1]];
+        yh = y_panel_back + post_floor + insert_pin_head[1];
         ycyl(2.4, y_panel_back - insert_pin_grip, y_panel_back + eps, xz);
         ycyl(insert_pin_d, y_panel_back, y_panel_back + post_floor, xz);
-        ycyl(insert_pin_head[0], y_panel_back + post_floor, y_panel_back + post_floor + insert_pin_head[1], xz);
+        ycyl(insert_pin_head[0], y_panel_back + post_floor, yh, xz);
+        translate([xz[0], 0, xz[1]]) wbox(-1.5, 1.5, yh - eps, yh + insert_pin_stem, -1, 1);
     }
     else color([0.7, 0.7, 0.72]) for (m = module_x, h = panel_mounts) {
         xz = [m + h[0], h[1]];

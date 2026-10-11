@@ -17,7 +17,7 @@ build is still there as an [option](#screw-build).
 | Pi + bonnet stack | 30.2 mm, including the PCB and the 3 mm standoff (see [stack height](#pi--bonnet-stack-height)) |
 | Bezel | about 2.5 mm visible border; hides **no** pixels |
 | Parts | bezel, shell, stand, 2 spacers, snap pins (plus a test coupon) |
-| Print | about 10 h and 190 g of PLA for the whole set, plus about 1 g of pins |
+| Print | about 10 h and 190 g of PLA for the whole set, plus about 2 g of pins |
 
 > **Before you print:** several part dimensions could not be read from an
 > official drawing. They are marked `UNVERIFIED` in `enclosure.scad`. Print the
@@ -279,8 +279,8 @@ Optional:
   acrylic, 3 mm (or 2 mm with `diffuser_t = 2`). Laser-cutting services and
   plastics shops cut to size.
 
-Tools: tweezers, needle-nose pliers and calipers. A pencil or a screwdriver with
-a 6 mm shank pushes the panel pins home. You need **no screwdriver for the
+Tools: tweezers and calipers. Each panel pin has its own stem, so your fingers
+push it home and pull it back out. You need **no screwdriver for the
 case**. You do need a small flat screwdriver for the bonnet's screw terminal
 (that screw is part of the bonnet, not the case) and for the bezel snap
 release.
@@ -335,12 +335,12 @@ The STLs are already in print orientation, so don't rotate them.
 | Part | Orientation | Supports | Infill | Time* | Filament* |
 |---|---|---|---|---|---|
 | `bezel.stl` | Front face down. The face gets the bed texture: textured PEI gives a matte finish that hides fingerprints. | None. The opening chamfer is 45 degrees, the tongue ledge is about 51 degrees, and the snap bumps have about 51 degree catch faces. | 15% | 1 h 24 m | 38 g / 12.8 m |
-| `shell.stl` | Back face down, open front up | None. The four pin wells end in 7 mm round bridges with two "bridge trick" layers. The Pi pin pockets in the back wall also get two bridge layers. The dovetail grooves close at the stop with a short bridge. If your slicer's auto-support paints anything inside the wells, block it. The other holes that run horizontally in print are teardrops or short flat bridges. | 15% | 5 h 27 m | 80 g / 26.8 m |
+| `shell.stl` | Back face down, open front up | None. The four pin wells end in 7 mm round bridges with two "bridge trick" layers. The Pi pin pockets in the back wall also get two bridge layers, and the standoffs above them flare out like a fillet. The dovetail grooves have a 0.6 mm chamfer at the mouth, against elephant foot. The dovetail grooves close at the stop with a short bridge. If your slicer's auto-support paints anything inside the wells, block it. The other holes that run horizontally in print are teardrops or short flat bridges. | 15% | 5 h 27 m | 80 g / 26.8 m |
 | `stand.stl` | Base down | None. The tongue flanks are 25 degrees from vertical. | 15% | 2 h 49 m | 68 g / 22.9 m |
 | `spacers.stl` | Standing up (2 pieces) | None | 100% | 6 m | 0.5 g |
-| `snap_pins.stl` | As exported, lying flat (11 pieces) | None, no brim | 100% | 15 m | 1 g / 0.3 m |
+| `snap_pins.stl` | As exported, lying flat (11 pieces) | None, no brim | 100% | 25 m | 1.6 g / 0.5 m |
 | `coupon.stl` | As exported (5 pieces and 2 test pins) | None | 15% | 18 m | 5 g |
-| **Total** (bezel + shell + stand + spacers + pins) | | | | **about 10 h** | **about 190 g**, plus about 1 g of pins |
+| **Total** (bezel + shell + stand + spacers + pins) | | | | **about 10 h** | **about 190 g**, plus about 2 g of pins |
 
 \* Estimated with PrusaSlicer 2.7 at MK4 / P1S-class speeds (80 to 200 mm/s,
 3000 to 5000 mm/s² acceleration). Bambu Studio's standard profile is in the
@@ -350,12 +350,14 @@ same range or a little faster. Older bed-slingers at 50 to 60 mm/s take 1.5 to
 Two-panel build: `bezel_left` and `bezel_right` take 1 h 10 m and 32 g each,
 `shell_left` and `shell_right` 5 h 33 m and 75 g each, and `stand_left` and
 `stand_right` 2 h 11 m and 57 g each. `snap_pins.stl` in `stl/two_panel/` is
-1.26 cm³ (about 2 g, 30 min).
+2.3 cm³ (about 3 g, 45 min).
 
 Snap pins:
 
 - Print them lying flat, as exported. Use 100% infill.
-- **PETG** is better, since it is springier. PLA works.
+- Use **PETG**. The short Pi pins' prongs bend about 2% as they pass the
+  Pi's hole, which is near PLA's limit. PLA pins may crack; PETG pins spring
+  back.
 - Use a 0.2 mm layer, no supports and no brim.
 - Turn elephant-foot compensation on, or check that the slits are open.
 - Print the spares. The file has them: 4 panel pins plus 1, 2 short Pi pins
@@ -443,9 +445,12 @@ Follow this order. Read it through once first.
    port, into the standoffs.
 4. Push two **long Pi pins** down through the bonnet's top holes, the spacers
    and the Pi's top holes, into the upper standoffs.
-5. Each pin goes in from the front, like a screw. Its barb (3.3 mm) squeezes
-   through the hole and clicks into the pocket behind the standoff. The catch
-   face is sloped, so a 1.4 to 1.6 mm Pi PCB is clamped either way.
+5. Each pin goes in from the front, like a screw. Its barb (3.2 mm) squeezes
+   through the hole and clicks into the pocket behind the standoff, where it
+   catches on a step 0.4 mm up the bore. The catch face is sloped, so it
+   clamps any stack within 0.2 mm of nominal: a 1.4 or a 1.6 mm Pi PCB, or a
+   header that seats a little high or low. The head has a 6 mm bar across it
+   that fits the Pi's pad.
 
 To release a Pi pin, squeeze the barb's two prongs together in the pocket at the
 back of the case with tweezers, and push the pin out toward the front.
@@ -490,13 +495,14 @@ back of the case with tweezers, and push the pin out toward the front.
 2. Check that no wire or ribbon is pinched under a post or against the Pi.
    The ribbon should lie flat along its path.
 3. With the shell's back now facing up, drop an **insert pin** down each of the
-   four screwdriver wells. The head (6 mm) sits on the post floor. Push each
-   one home with a pencil, a 6 mm screwdriver shank or similar. Its 3.0 mm
-   split end springs 4 mm into the insert and grips the thread.
+   four screwdriver wells, tip first. Push each one home by its stem until
+   the head sits on the post floor. Its split end has a thin 2.3 mm neck (a
+   long, soft spring) and a 2.8 mm bulge that springs into the insert's
+   thread, 1.3 to 3 mm in.
 
-To remove an insert pin, pull it out with needle-nose pliers or tweezers. A
-slight twist helps. If a pin ever won't grip, an **M3 x 8** screw still fits
-the same post.
+To remove an insert pin, pull it out by its stem. A slight twist helps: the
+bulge follows the thread. If a pin ever won't grip, an **M3 x 8** screw still
+fits the same post.
 
 ### 6. Bezel on
 
@@ -577,10 +583,10 @@ Edit these at the top of `enclosure.scad`, or pass them with `-D` to the scripts
   - two independent stand feet;
   - 4 alignment pins;
   - `snap_pins.stl`: 9 panel pins, 3 short and 3 long Pi pins, and 3 joint
-    pins (1.26 cm³).
+    pins (2.3 cm³).
 
   The shell halves join with the alignment pins and a printed joint pin in
-  blocks at the top and bottom. The joint pin has a 3.0 mm shank and a 3.9 mm
+  blocks at the top and bottom. The joint pin has a 3.0 mm shank and a 4.2 mm
   barb. Its head sits in the 6.2 mm recess and the barb catches in the nut
   trap, in place of an M3 x 16 bolt and a nut (which the screw build still
   uses). The bezel halves are located by the shell and
