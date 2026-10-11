@@ -3,7 +3,7 @@
 ┌────────────────────────────────────────────────────────────────┐
 │[logo] ABBR •                                              27   │  rows 0-11
 │[logo] ABBR                                                24   │  rows 13-24
-│Q3 4:12                                                   3&7   │  rows 26-31
+│Q3 4:12                                              3&7 or ball│  rows 26-31
 └────────────────────────────────────────────────────────────────┘
 """
 
@@ -20,12 +20,13 @@ from .base import (
     RenderContext,
     blank,
     draw_dot,
+    draw_league_mark,
     draw_right,
     draw_team_mark,
     fit_font,
     font,
     has_possession,
-    league_label,
+    league_mark_width,
     possession_color,
     score_colors,
     score_text,
@@ -87,15 +88,17 @@ def _status_row(img: Image.Image, game: Game, ctx: RenderContext) -> None:
     f = font("5x7")
     f.draw_cap(img, 0, STATUS_Y, st.line, status_color(game))
     used = f.text_width(st.line)
-    right_text, color = "", LEAGUE_COLOR
+    room = 64 - used - 3
     if game.state == "in" and st.detail and ctx.show_situation:
-        right_text, color = st.detail, DETAIL_COLOR
+        rf = fit_font(st.detail, room, ("5x7", "4x6", "tom-thumb"))
+        if rf.text_width(st.detail) <= room:
+            y = STATUS_Y + (f.cap_height - rf.cap_height)
+            draw_right(img, rf, 63, y, st.detail, DETAIL_COLOR)
     elif game.state != "in":
-        right_text = league_label(game)
-    if right_text:
-        rf = fit_font(right_text, 64 - used - 3, ("5x7", "4x6", "tom-thumb"))
-        if rf.text_width(right_text) <= 64 - used - 3:
-            draw_right(img, rf, 63, STATUS_Y + (f.cap_height - rf.cap_height), right_text, color)
+        # Sport glyph (5 rows tall), bottom-aligned with the status text.
+        w = league_mark_width(game)
+        if w <= room:
+            draw_league_mark(img, game, 64 - w, STATUS_Y + f.cap_height - 5)
 
 
 def render_rows(

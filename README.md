@@ -28,6 +28,9 @@ make dev-replay          # --replay --fake-live on the emulator
 - One slide per game, in league order from `config.yaml`. Your favorite teams
   go first within each group (live, upcoming, final), and a live favorite stays
   on screen longer.
+- A small ball glyph shows the sport instead of the league name: a football,
+  basketball, soccer ball, baseball, or hockey stick and puck. College leagues
+  add a "C" to the left of the ball.
 - Scores flash in the scoring team's color for a few seconds.
 - Down and distance or possession are shown when ESPN provides them.
 - Brightness follows a day and night schedule.

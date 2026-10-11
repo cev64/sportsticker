@@ -19,6 +19,7 @@ class League:
     sport: str  # ESPN path part, e.g. "football"
     league: str  # ESPN path part, e.g. "nfl"
     label: str  # short display label, e.g. "NFL"
+    college: bool = False  # shown with a "C" beside the sport glyph
 
     @property
     def path(self) -> str:
@@ -30,9 +31,9 @@ LEAGUES: dict[str, League] = {
     lg.key: lg
     for lg in (
         League("nfl", "football", "nfl", "NFL"),
-        League("ncaaf", "football", "college-football", "NCAAF"),
+        League("ncaaf", "football", "college-football", "NCAAF", college=True),
         League("nba", "basketball", "nba", "NBA"),
-        League("ncaab", "basketball", "mens-college-basketball", "NCAAB"),
+        League("ncaab", "basketball", "mens-college-basketball", "NCAAB", college=True),
         League("wnba", "basketball", "wnba", "WNBA"),
         League("mlb", "baseball", "mlb", "MLB"),
         League("nhl", "hockey", "nhl", "NHL"),
