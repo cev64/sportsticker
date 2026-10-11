@@ -15,7 +15,7 @@
 //
 //  Command line: openscad -o out.stl -D 'part="shell"' enclosure.scad
 //  Printable parts (already in print orientation): bezel shell stand spacers
-//  coupon pins, and bezel_left/_right, shell_left/_right, stand_left/_right
+//  snap_pins coupon pins, and bezel_left/_right, shell_left/_right, stand_left/_right
 //  for the 2-panel build. Views: assembly (on the stand), exploded, case (no
 //  stand), section, section2, hardware. Collision checks: check_* at the end.
 //  Scripts: export.sh (STLs), render.sh (PNGs), check.sh (collisions).
@@ -45,6 +45,11 @@ desk_stand = true;
 stand_tilt = 6;
 // Keyhole slots in the back wall for hanging on two screws.
 wall_mount = false;
+
+/* [Fastening] */
+// "printed": no screws or nuts at all. Printed snap pins hold the panel and
+// the Pi, and the stand slides onto dovetails. "screws": the M3 / M2.5 build.
+fasteners = "printed";
 
 /* [Printer and fit] */
 // Usable bed. Bambu P1/X1/A1 = 256 x 256; Prusa MK4 = 250 x 210.
@@ -233,6 +238,41 @@ pi_standoff_d = 6.0;
 // Spacer between Pi and bonnet on the two shared holes.
 spacer_od = 5.5;
 
+/* [Printed snap pins (fasteners = "printed")] */
+// Every pin prints lying on a flat (thickness = pin_flat x shank), split in
+// the bed plane so its two prongs flex sideways along the layers.
+pin_flat = 0.75;
+// Pi + bonnet pins, pushed in from the front: shank, barb, slit, head.
+// The barb squeezes through the Pi's 2.7 mm hole and snaps into a pocket in
+// the back of the shell.
+pi_pin_d = 2.4;
+pi_pin_barb = 3.3;
+pi_pin_slit = 0.8;
+pi_pin_head = [4.5, 1.6];   // diameter, thickness
+pi_pin_bore = 2.75;         // standoff bore
+pi_pin_pocket = 5.6;        // barb pocket in the back wall (tweezers fit here)
+// Panel pins, pushed down the screwdriver wells: the split end springs into
+// the panel's M3 insert (thread minor diameter 2.46) and grips the thread.
+insert_pin_d = 3.0;
+insert_pin_slit = 1.0;
+insert_pin_grip = 4.0;      // length inside the insert (keep < panel_insert_depth)
+insert_pin_head = [6.0, 1.6];
+// Joint pin for the split shell (2-panel build): barb snaps into the nut trap.
+joint_pin_d = 3.0;
+joint_pin_barb = 3.9;
+joint_pin_slit = 1.0;
+joint_pin_head = [6.0, 2.0];
+// Stand dovetails: a tongue on each stand pad slides into a groove in the
+// shell's bottom from the back. Neck width at the case's bottom face, height,
+// flank angle from vertical, groove length from the back face.
+dt_w = 8.0;
+dt_h = 4.5;
+dt_angle = 25;
+dt_len = 18;
+// The last few mm of each tongue are this much wider per side than the
+// groove: a friction wedge that keeps the stand on when you carry the ticker.
+dt_lock = 0.1;
+
 /* [Desk stand] */
 stand_w = panels == 1 ? 170 : 330;
 stand_d = 100;
@@ -318,6 +358,18 @@ pi_screw_short = pi_pcb_t + pi_underside + back_t;
 pi_screw_long = bonnet_pcb_t + bonnet_gap + pi_pcb_t + pi_underside + back_t;
 stand_screw_len = stand_screw_floor + wall + 6;
 
+// Printed snap pins: length from the head's underside to the ledge the barb
+// catches on. The Pi pins catch on the end of the standoff, in a pocket in
+// the back wall; the panel pins grip inside the insert past the post floor.
+screwless = fasteners == "printed";
+pi_pin_short = pi_pcb_t + pi_underside;
+pi_pin_long = bonnet_top_h + pi_pcb_t + pi_underside;
+joint_pin_len = 14;   // split block: head recess floor to nut trap floor
+
+// Stand dovetail: groove top (Z) and how far each flank leans out.
+dt_top = -out_h / 2 + dt_h;
+dt_spread = dt_h * tan(dt_angle);
+
 needs_split = out_w > bed_x - 5 || out_h > bed_y - 5;
 
 echo(str("REPORT outer W x H x D = ", out_w, " x ", out_h, " x ", depth, " mm"));
@@ -330,6 +382,12 @@ echo(str("REPORT bezel opening ", open_w, " x ", open_h, "; effective lip ", lip
 echo(str("REPORT screws: panel M3 x ", panel_screw_len, "; Pi M2.5 short space ", pi_screw_short,
          "; long space ", pi_screw_long, "; stand M3 x ", stand_screw_len));
 echo(str("REPORT split needed for bed: ", needs_split));
+if (screwless)
+    echo(str("REPORT printed pins: Pi short grip ", pi_pin_short, ", Pi long grip ", pi_pin_long,
+             ", panel pin ", post_floor, " + ", insert_pin_grip, " into the insert"));
+if (screwless && insert_pin_grip > panel_insert_depth - 0.5)
+    echo(str("WARNING: insert_pin_grip ", insert_pin_grip, " would bottom out in a ",
+             panel_insert_depth, " mm insert; shorten it."));
 if (!bezel_hides_leds && bezel_lip > lip_eff + 0.01)
     echo(str("WARNING: bezel_lip ", bezel_lip, " would hide part of the outer LEDs; clamped to ",
              lip_eff, ". Set bezel_hides_leds = true to force it."));
@@ -365,6 +423,60 @@ module teardrop_z(d, h) {
 
 module wbox(x0, x1, y0, y1, z0, z1) {
     translate([x0, y0, z0]) cube([x1 - x0, y1 - y0, z1 - z0]);
+}
+
+// Two 0.2 mm "bridge trick" layers above a counterbore of diameter `big`
+// that narrows to `small` (shell prints back-down, so -Y is up): a slot,
+// then a square, so the step prints as plain bridges.
+module bridge_layers(xz, y_ceiling, small, big) {
+    translate([xz[0], y_ceiling - 0.2, xz[1]]) wbox(-small / 2, small / 2, 0, 0.2 + eps, -big / 2, big / 2);
+    translate([xz[0], y_ceiling - 0.4, xz[1]]) wbox(-small / 2, small / 2, 0, 0.2 + eps, -small / 2, small / 2);
+}
+
+// Printed snap pin, axis +Z, head underside at z = 0. S is the grip length
+// (head underside to the ledge the barb catches on). With grip > 0 the pin
+// has no barb: its split end is a spring that grips a threaded hole from
+// z = S to S + grip. The pin is cut to a flat on -Y (it prints lying on it)
+// and split in the YZ plane, so the prongs flex along X, in the bed plane.
+// The barb's catch face slopes from S - 0.3 to S + 0.2: it latches with some
+// preload over that whole range (a Pi PCB is 1.4 to 1.6 mm).
+module snap_pin(S, d, barb, slit, head, grip = 0) {
+    t = pin_flat * d;
+    tip = 1.6;
+    z_tip = grip > 0 ? S + grip : S + 0.2 + tip;
+    hd = head[0] / 2;
+    prof = grip > 0
+        ? [[0, -head[1]], [hd, -head[1]], [hd, -0.3], [hd - 0.3, 0], [d / 2, 0],
+           [d / 2, z_tip - 0.8], [d / 2 - 0.5, z_tip], [0, z_tip]]
+        : [[0, -head[1]], [hd, -head[1]], [hd, -0.3], [hd - 0.3, 0], [d / 2, 0],
+           [d / 2, S - 0.3], [barb / 2, S + 0.2], [d / 2 - 0.2, z_tip], [0, z_tip]];
+    slit0 = max(1.0, S - 6);
+    difference() {
+        intersection() {
+            rotate_extrude($fn = 40) polygon(prof);
+            union() {
+                translate([-20, -t / 2, -eps]) cube([40, t, z_tip + 1]);
+                translate([-20, -t / 2, -head[1] - 1]) cube([40, 20, head[1] + 1]);
+            }
+        }
+        translate([-slit / 2, -20, slit0]) cube([slit, 40, z_tip]);
+    }
+}
+module pi_pin(long) { snap_pin(long ? pi_pin_long : pi_pin_short, pi_pin_d, pi_pin_barb, pi_pin_slit, pi_pin_head); }
+module insert_pin() { snap_pin(post_floor, insert_pin_d, 0, insert_pin_slit, insert_pin_head, insert_pin_grip); }
+module joint_pin() { snap_pin(joint_pin_len, joint_pin_d, joint_pin_barb, joint_pin_slit, joint_pin_head); }
+
+// Stand dovetail profile in the XZ plane at X = 0: neck at the case's bottom
+// face, widening upward. `grow` widens it per side (negative = clearance),
+// `drop` lowers its top, `below` extends the neck down past the face.
+// The profile is not convex, so hull() works on its two convex pieces
+// (piece 0: the neck below the face, 1: the flaring part above it).
+module dt_profile(grow, drop = 0, below = 1, piece = -1) {
+    if (piece != 1)
+        translate([-dt_w / 2 - grow, -out_h / 2 - below]) square([dt_w + 2 * grow, below + eps]);
+    if (piece != 0)
+        polygon([[-dt_w / 2 - grow, -out_h / 2], [dt_w / 2 + grow, -out_h / 2],
+                 [dt_w / 2 + dt_spread + grow, dt_top - drop], [-dt_w / 2 - dt_spread - grow, dt_top - drop]]);
 }
 
 // =============================================================================
@@ -540,11 +652,22 @@ module pi_standoffs() {
 }
 
 module pi_standoff_holes() {
-    for (h = pi_holes) ycyl(m25_tap_d, y_pi_bot - 1, depth + 1, P(h));
+    for (h = pi_holes) {
+        if (screwless) {
+            // Bore for the snap pin, and a pocket in the back wall where its
+            // barb catches on the end of the standoff.
+            ycyl(pi_pin_bore, y_pi_bot - 1, depth + 1, P(h));
+            ycyl(pi_pin_pocket, y_back_in, depth + 1, P(h));
+            bridge_layers(P(h), y_back_in, pi_pin_bore, pi_pin_pocket);
+        } else
+            ycyl(m25_tap_d, y_pi_bot - 1, depth + 1, P(h));
+    }
 }
 
-// Bosses for the desk stand screws: M3 nut slides in from the front.
-stand_boss = [10, 12, 9];  // X, Y, Z
+// Bosses for the desk stand. Screws: an M3 nut slides in from the front.
+// Printed: a dovetail groove, open at the back face, takes the stand's tongue.
+stand_boss = screwless ? [dt_w + 2 * dt_spread + 5, 2 * (dt_len + 2 - stand_screw_from_back), dt_h - wall + 2]
+                       : [10, 12, 9];  // X, Y, Z
 function stand_screw_y() = depth - stand_screw_from_back;
 module stand_bosses() {
     for (x = [-stand_pad_x, stand_pad_x])
@@ -554,7 +677,9 @@ module stand_bosses() {
              -cav_h / 2 - eps, -cav_h / 2 + stand_boss[2]);
 }
 module stand_boss_holes() {
-    for (x = [-stand_pad_x, stand_pad_x]) {
+    if (screwless) for (x = [-stand_pad_x, stand_pad_x])
+        translate([x, 0, 0]) xz_extrude(depth - dt_len, depth + 1) dt_profile(0);
+    else for (x = [-stand_pad_x, stand_pad_x]) {
         translate([x, stand_screw_y(), -out_h / 2 - 1]) teardrop_z(m3_clear_d, wall + stand_boss[2] + 2);
         // Nut slot, open toward the front of the case.
         nz = -cav_h / 2 + 2.2;
@@ -726,7 +851,23 @@ module on_stand() {
     translate([0, 0, stand_lift]) rotate([-stand_tilt, 0, 0]) translate([0, 0, out_h / 2]) children();
 }
 
-module stand() {
+// Dovetail tongue on a stand pad, in the case's frame. It slides into the
+// shell's groove from the back and stops against the groove's front end.
+// Its last few mm widen into a friction wedge (`lock` = false drops the
+// wedge, for the collision check).
+module stand_tongue(x, lock = true) {
+    y0 = depth - dt_len;
+    yw = depth - 4.5;
+    translate([x, 0, 0]) {
+        xz_extrude(y0, yw) dt_profile(-pin_clear, pin_clear, 2);
+        for (k = [0, 1]) hull() {
+            xz_extrude(yw - eps, yw) dt_profile(-pin_clear, pin_clear, 2, k);
+            xz_extrude(depth - 2.5, depth - 0.6) dt_profile(lock ? dt_lock : -pin_clear, pin_clear, 2, k);
+        }
+    }
+}
+
+module stand(lock = true) {
     difference() {
         union() {
             // Base plate.
@@ -739,9 +880,10 @@ module stand() {
                          stand_base_t - eps, stand_lift + out_h);
                     on_stand() wbox(-out_w, out_w, -20, depth + 20, -out_h / 2 - 80, -out_h / 2 - 0.05);
                 }
+            if (screwless) for (x = [-stand_pad_x, stand_pad_x]) on_stand() stand_tongue(x, lock);
         }
         // Counterbored screw holes, square to the case bottom.
-        for (x = [-stand_pad_x, stand_pad_x])
+        if (!screwless) for (x = [-stand_pad_x, stand_pad_x])
             on_stand() translate([x, stand_screw_y(), -out_h / 2]) {
                 translate([0, 0, -30]) cylinder(d = m3_clear_d, h = 31);
                 translate([0, 0, -80]) cylinder(d = 6.6, h = 80 - stand_screw_floor);
@@ -760,13 +902,28 @@ module stand() {
 // =============================================================================
 
 // Spacer between Pi and bonnet on the two shared holes (print 2).
+// The bore lets a snap pin's barb slide through with a light drag.
+spacer_bore = screwless ? pi_pin_barb - 0.1 : m25_clear_d;
 module spacer() {
     difference() {
         cylinder(d = spacer_od, h = bonnet_gap - 0.2);
-        translate([0, 0, -1]) cylinder(d = m25_clear_d, h = bonnet_gap + 2);
+        translate([0, 0, -1]) cylinder(d = spacer_bore, h = bonnet_gap + 2);
     }
 }
 module spacers() { for (i = [0, 1]) translate([i * 9, 0, 0]) spacer(); }
+
+// A snap pin in print orientation: lying on its flat, axis along -Y.
+module pin_flat_down(d) { translate([0, 0, pin_flat * d / 2]) rotate([90, 0, 0]) children(); }
+
+// Every snap pin for the build, plus one spare of each kind (print 100% infill).
+module snap_pins() {
+    n_ins = 4 * panels + 1;
+    for (i = [0 : n_ins - 1]) translate([i * 8, 0, 0]) pin_flat_down(insert_pin_d) insert_pin();
+    for (i = [0 : 2]) translate([i * 7, -16, 0]) pin_flat_down(pi_pin_d) pi_pin(false);
+    for (i = [0 : 2]) translate([24 + i * 7, -16, 0]) pin_flat_down(pi_pin_d) pi_pin(true);
+    if (panels > 1)
+        for (i = [0 : 2]) translate([i * 8, -42, 0]) pin_flat_down(joint_pin_d) joint_pin();
+}
 
 // Alignment pins for a split shell (2-panel build, print 4).
 module pins() {
@@ -817,7 +974,36 @@ module coupon_standoff() {
             translate([-7, -7, 0]) cube([14, 14, back_t]);
             cylinder(d = pi_standoff_d, h = back_t + pi_underside);
         }
-        translate([0, 0, -1]) cylinder(d = m25_tap_d, h = 20);
+        if (screwless) {
+            // Same bore, barb pocket and bridge layers as the shell.
+            translate([0, 0, -1]) cylinder(d = pi_pin_bore, h = 20);
+            translate([0, 0, -1]) cylinder(d = pi_pin_pocket, h = back_t + 1);
+            translate([-pi_pin_bore / 2, -pi_pin_pocket / 2, back_t - eps]) cube([pi_pin_bore, pi_pin_pocket, 0.2 + eps]);
+            translate([-pi_pin_bore / 2, -pi_pin_bore / 2, back_t + 0.2 - eps]) cube([pi_pin_bore, pi_pin_bore, 0.2 + eps]);
+        } else
+            translate([0, 0, -1]) cylinder(d = m25_tap_d, h = 20);
+    }
+}
+
+// E: dovetail test. A short groove block (standing, as the shell prints it)
+// and a tongue on a plate (as the stand prints it, wedge end included).
+module coupon_dovetail() {
+    bw = stand_boss[0];
+    // Groove block: the case's bottom wall and boss, 10 mm long.
+    linear_extrude(10) translate([0, out_h / 2]) difference() {
+        translate([-bw / 2, -out_h / 2]) square([bw, wall + stand_boss[2]]);
+        dt_profile(0);
+    }
+    // Tongue: 12 mm long on a 3 mm plate, the last 4 mm widening into the wedge.
+    translate([bw / 2 + 12, 14, 0]) {
+        translate([-8, -12, 0]) cube([16, 12, 3]);
+        translate([0, 0, 3]) rotate([90, 0, 0]) {
+            linear_extrude(8) translate([0, out_h / 2]) dt_profile(-pin_clear, pin_clear, 0.5);
+            for (k = [0, 1]) hull() {
+                translate([0, 0, 8 - eps]) linear_extrude(eps) translate([0, out_h / 2]) dt_profile(-pin_clear, pin_clear, 0.5, k);
+                translate([0, 0, 10]) linear_extrude(2) translate([0, out_h / 2]) dt_profile(dt_lock, pin_clear, 0.5, k);
+            }
+        }
     }
 }
 
@@ -829,6 +1015,12 @@ module coupon() {
     // C and D.
     translate([34, 8, 0]) coupon_standoff();
     translate([34, 24, 0]) spacer();
+    if (screwless) {
+        // E, and one panel pin and one short Pi pin to test with.
+        translate([62, 6, 0]) coupon_dovetail();
+        translate([48, 40, 0]) pin_flat_down(insert_pin_d) insert_pin();
+        translate([56, 40, 0]) pin_flat_down(pi_pin_d) pi_pin(false);
+    }
 }
 
 // =============================================================================
@@ -916,7 +1108,16 @@ module bonnet() {
 }
 
 module pi_screws() {
-    color([0.7, 0.7, 0.72]) {
+    // Printed snap pins: head on the board, barb in the back-wall pocket.
+    if (screwless) color([0.35, 0.35, 0.38]) for (i = [0 : 3]) {
+        long = i >= 2;
+        xz = P(pi_holes[i]);
+        y_head = long ? y_bonnet_top : y_pi_top;
+        ycyl(pi_pin_head[0], y_head - pi_pin_head[1], y_head, xz);
+        ycyl(pi_pin_d, y_head - eps, y_back_in + 0.2, xz);
+        ycyl(pi_pin_barb, y_back_in + 0.2, y_back_in + 1.0, xz);
+    }
+    else color([0.7, 0.7, 0.72]) {
         for (i = [0, 1]) ycyl(2.0, y_pi_top - 1.8, y_pi_top - 1.8 + 6, P(pi_holes[i]));
         for (i = [2, 3]) ycyl(2.0, y_bonnet_top - 1.8, y_bonnet_top + 18 - 1.8, P(pi_holes[i]));
         for (i = [0, 1]) ycyl(4.5, y_pi_top - 1.8, y_pi_top, P(pi_holes[i]));
@@ -927,7 +1128,14 @@ module pi_screws() {
 }
 
 module panel_screws() {
-    color([0.7, 0.7, 0.72]) for (m = module_x, h = panel_mounts) {
+    // Printed: head on the post floor, split end gripping the insert.
+    if (screwless) color([0.35, 0.35, 0.38]) for (m = module_x, h = panel_mounts) {
+        xz = [m + h[0], h[1]];
+        ycyl(2.4, y_panel_back - insert_pin_grip, y_panel_back + eps, xz);
+        ycyl(insert_pin_d, y_panel_back, y_panel_back + post_floor, xz);
+        ycyl(insert_pin_head[0], y_panel_back + post_floor, y_panel_back + post_floor + insert_pin_head[1], xz);
+    }
+    else color([0.7, 0.7, 0.72]) for (m = module_x, h = panel_mounts) {
         xz = [m + h[0], h[1]];
         ycyl(2.5, y_panel_back - panel_insert_depth, y_panel_back + post_floor, xz);
         ycyl(5.5, y_panel_back + post_floor, y_panel_back + post_floor + 2.0, xz);
@@ -1178,6 +1386,7 @@ else if (part == "stand_left") half(-1) print_stand();
 else if (part == "stand_right") half(1) print_stand();
 else if (part == "spacers") spacers();
 else if (part == "pins") pins();
+else if (part == "snap_pins") snap_pins();
 else if (part == "coupon") coupon();
 else if (part == "hardware") hardware();
 // ---- Collision checks: each renders the overlap volume; empty = no collision.
@@ -1194,4 +1403,4 @@ else if (part == "check_bezel_shell") intersection() { bezel(); shell(); }
 else if (part == "check_shell_lead") intersection() { shell_body(); power_lead(); }
 else if (part == "check_clips_hw") intersection() { shell_clips(); union() { pi_stack(); led_panel(); ribbon(); usbc_plug(); } }
 else if (part == "check_lead_ribbon") intersection() { power_lead(); ribbon(); }
-else if (part == "check_stand_case") intersection() { stand(); on_stand() union() { shell(); bezel(); } }
+else if (part == "check_stand_case") intersection() { stand(false); on_stand() union() { shell(); bezel(); } }
