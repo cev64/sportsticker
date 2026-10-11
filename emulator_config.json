@@ -1,0 +1,23 @@
+{
+    "pixel_outline": 0,
+    "pixel_size": 16,
+    "pixel_style": "real",
+    "pixel_glow": 6,
+    "display_adapter": "browser",
+    "allow_adapter_fallback": true,
+    "icon_path": null,
+    "emulator_title": "sportsticker",
+    "suppress_font_warnings": true,
+    "browser": {
+        "_comment": "For use with the browser adapter only.",
+        "port": 8888,
+        "target_fps": 30,
+        "fps_display": false,
+        "quality": 90,
+        "image_border": true,
+        "debug_text": false,
+        "image_format": "PNG",
+        "open_immediately": false
+    },
+    "log_level": "info"
+}

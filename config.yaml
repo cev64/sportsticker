@@ -1,0 +1,78 @@
+# sportsticker configuration. CLI flags override anything here.
+# Run `python -m sportsticker --check-config` to validate without starting.
+
+timezone: America/New_York
+
+# Leagues in display order (top = first). true = shown, false = skipped.
+# Known keys: nfl, ncaaf, nba, ncaab, wnba, mlb, nhl, epl, mls
+leagues:
+  nfl: true
+  ncaaf: true
+  nba: true
+  ncaab: true
+  nhl: true
+  epl: true
+
+# Favorite teams per league, by ESPN abbreviation. Favorites go first within
+# each group (live / upcoming / final) and live favorites stay on screen longer.
+favorites:
+  nfl: [KC]          # Chiefs
+  ncaab: [CREI]      # Creighton
+  nba: [OKC, CHA]    # Thunder, Hornets
+  nhl: [STL]         # Blues
+  epl: [TOT]         # Spurs (Tottenham)
+
+display:
+  layout: a                 # a | b | c | text   (see README for pictures)
+  logo_variant: auto        # auto | logo | dark   (auto picks what reads best on black)
+  logos: true               # false = abbreviations only
+  slide_seconds: 6
+  favorite_live_seconds: 10 # dwell time for a live game with a favorite team
+  score_flash_seconds: 4    # highlight the scoring team this long after a score
+  show_situation: true      # possession dot / down & distance when ESPN has it
+  transitions: false        # horizontal push between slides (costs some CPU)
+  transition_ms: 400
+  animation_fps: 30         # frame rate for flashes and transitions only
+
+brightness:
+  day: 60                   # 0-100
+  night: 15
+  night_start: "22:30"      # local time
+  night_end: "07:00"
+
+polling:
+  live_seconds: 30          # any shown game in progress (never below 30)
+  idle_seconds: 300         # no live games
+  overnight_seconds: 3600
+  overnight_start: "01:00"
+  overnight_end: "08:00"
+  timeout_seconds: 10
+  max_backoff_seconds: 900  # cap for exponential backoff on errors
+
+logos:
+  cache_dir: ~/.cache/sportsticker/logos
+  max_age_days: 30
+
+# Passed straight to rgbmatrix.RGBMatrixOptions (and the emulator).
+# Day brightness above wins over matrix.brightness at runtime.
+matrix:
+  rows: 32
+  cols: 64
+  chain_length: 1
+  parallel: 1
+  hardware_mapping: adafruit-hat
+  gpio_slowdown: 4
+  brightness: 60
+  panel_type: ""            # try "FM6126A" if the panel stays dark
+  pwm_bits: 11
+  pwm_lsb_nanoseconds: 130
+  pwm_dither_bits: 0
+  scan_mode: 0
+  multiplexing: 0
+  row_address_type: 0
+  led_rgb_sequence: RGB
+  pixel_mapper_config: ""
+  limit_refresh_rate_hz: 0
+  show_refresh_rate: false
+  disable_hardware_pulsing: false
+  drop_privileges: false    # keep root so the logo cache stays writable

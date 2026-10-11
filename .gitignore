@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Downloaded team logos are trademarks: never commit them.
+.cache/
+logos/
+*.logo.png
+
+# Generated output
+snapshots/
+site/
+profile*.log
+
+# Local overrides
+config.local.yaml
+.DS_Store
