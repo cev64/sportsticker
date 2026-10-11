@@ -1,0 +1,21 @@
+[Unit]
+Description=sportsticker - live sports scores on an RGB LED matrix
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Runs as root for GPIO/DMA access. The logo cache stays writable because
+# matrix.drop_privileges is false in config.yaml.
+User=root
+WorkingDirectory=/home/charlie/sportsticker
+Environment=PYTHONUNBUFFERED=1
+# Fewer malloc arenas keeps RSS small on the 1 GB Pi (logo worker thread).
+Environment=MALLOC_ARENA_MAX=2
+ExecStart=/home/charlie/ticker-venv/bin/python -m sportsticker run --config /home/charlie/sportsticker/config.yaml --backend hardware --logo-cache /home/charlie/.cache/sportsticker/logos
+Nice=-5
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
