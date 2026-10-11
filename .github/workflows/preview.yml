@@ -1,0 +1,109 @@
+name: Pages preview
+
+# Builds the public preview at https://cev64.github.io/sportsticker/
+#   /live/  what the ticker would show right now (ESPN, snapshot at build time)
+#   /demo/  recorded games with simulated scoring (no network needed)
+#
+# Team logos are deliberately excluded (--no-logos): they are team trademarks
+# and the ticker only shows them for personal display. Never publish them.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: pip install -e .
+
+      # ESPN can be flaky or rate-limit us. Keep building so the demo still
+      # deploys; the live page is then missing until the next scheduled run.
+      - name: Live snapshot
+        run: python -m sportsticker snapshot --source live --no-logos --site --out site/live || echo "live snapshot failed"
+
+      - name: Demo snapshot
+        run: python -m sportsticker snapshot --source fake-live --no-logos --site --out site/demo
+
+      - name: Landing page
+        run: |
+          mkdir -p site
+          cat > site/index.html <<EOF
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta name="color-scheme" content="dark">
+            <title>sportsticker preview</title>
+            <style>
+              body { margin: 0; background: #0b0d10; color: #e8eaed;
+                     font: 16px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+              main { max-width: 640px; margin: 0 auto; padding: 48px 16px; }
+              h1 { font-size: 28px; margin: 0 0 8px; }
+              p { color: #aab0b8; }
+              .card { display: block; margin: 16px 0; padding: 16px 18px; border-radius: 10px;
+                      background: #161a20; border: 1px solid #242a33; color: inherit;
+                      text-decoration: none; }
+              .card:hover { border-color: #4a90e2; }
+              .card strong { display: block; font-size: 18px; color: #ffffff; }
+              .small { font-size: 13px; color: #6f7784; }
+            </style>
+          </head>
+          <body>
+            <main>
+              <h1>sportsticker preview</h1>
+              <p>A live sports scoreboard for a 64x32 RGB LED matrix. These pages show
+                 the same slides the ticker renders.</p>
+              <a class="card" href="live/">
+                <strong>Live</strong>
+                What the ticker would show right now, from ESPN scoreboards at build time.
+                Refreshed about every 30 minutes.
+              </a>
+              <a class="card" href="demo/">
+                <strong>Demo</strong>
+                Recorded games with simulated scoring, so you can see every slide and
+                score change at any hour.
+              </a>
+              <p class="small">Built $(date -u '+%Y-%m-%d %H:%M UTC'). Team logos are not shown.</p>
+            </main>
+          </body>
+          </html>
+          EOF
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
