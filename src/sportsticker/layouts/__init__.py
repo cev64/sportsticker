@@ -21,6 +21,17 @@ LAYOUTS: dict[str, LayoutFn] = {
     "text": render_text,
 }
 
+# Every font the layouts use; loaded once at startup so no frame waits on parsing.
+FONTS = ("tom-thumb", "4x6", "5x7", "5x8", "6x10", "6x13B", "7x13B", "8x13B", "9x18B")
+
+
+def preload_fonts() -> None:
+    from ..bdf import load_font
+
+    for name in FONTS:
+        load_font(name)
+
+
 # Logo bounding-box sizes each layout asks for (pre-scaled in the logo cache).
 LOGO_SIZES: tuple[int, ...] = (12, 15, 21)
 
@@ -39,4 +50,5 @@ __all__ = [
     "RenderContext",
     "render_clock",
     "render_game",
+    "preload_fonts",
 ]

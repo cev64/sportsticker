@@ -20,7 +20,7 @@ from PIL import Image
 
 from .backend import Backend
 from .config import Config, in_window
-from .layouts import LAYOUTS, NO_HIGHLIGHT, Highlight, RenderContext, render_clock
+from .layouts import LAYOUTS, NO_HIGHLIGHT, Highlight, RenderContext, preload_fonts, render_clock
 from .profile import Profiler
 from .slides import ScoreTracker, Slide, build_playlist
 
@@ -47,6 +47,7 @@ class Renderer:
         self._cache: OrderedDict = OrderedDict()
         self._cache_size = cache_size
         self.renders = 0  # cache misses, for profiling/tests
+        preload_fonts()
 
     def context(self, now: datetime) -> RenderContext:
         return RenderContext(

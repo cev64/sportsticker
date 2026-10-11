@@ -10,6 +10,8 @@ Type=simple
 User=root
 WorkingDirectory=/home/charlie/sportsticker
 Environment=PYTHONUNBUFFERED=1
+# Fewer malloc arenas keeps RSS small on the 1 GB Pi (logo worker thread).
+Environment=MALLOC_ARENA_MAX=2
 ExecStart=/home/charlie/ticker-venv/bin/python -m sportsticker run --config /home/charlie/sportsticker/config.yaml --backend hardware --logo-cache /home/charlie/.cache/sportsticker/logos
 Nice=-5
 Restart=always
