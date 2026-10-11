@@ -42,7 +42,7 @@ diffuser_overlap = 2.0;
 // Desk stand part. The stand is a separate part that screws to the shell.
 desk_stand = true;
 // Back tilt of the desk stand, degrees from vertical.
-stand_tilt = 12;
+stand_tilt = 6;
 // Keyhole slots in the back wall for hanging on two screws.
 wall_mount = false;
 

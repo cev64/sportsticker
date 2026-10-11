@@ -3,7 +3,7 @@
 A 3D-printed case for one Adafruit 64x32 P3 LED matrix (#2279), a Raspberry Pi 4
 and the Adafruit RGB Matrix Bonnet (#3211). It has a slim front bezel, a rear
 shell that holds the panel by its own M3 inserts and carries the Pi behind it,
-and a desk stand tilted back 12 degrees. Everything is printable in PLA or PETG
+and a desk stand tilted back 6 degrees. Everything is printable in PLA or PETG
 with no supports, and assembly needs no soldering or heat-set inserts.
 
 ![Front, on the desk stand](renders/front_3q.png)
@@ -69,7 +69,7 @@ The case has three printed parts:
   components (and the bonnet) **facing the panel**. That is the shallowest
   layout: the 3 mm under the Pi is needed anyway for the microSD socket and
   solder pins.
-- **Stand.** A wide base with two pads that follow the 12 degree tilt. It
+- **Stand.** A wide base with two pads that follow the 6 degree tilt. It
   attaches with two M3 screws from underneath into nuts inside the shell, so
   you can remove it without opening the case.
 
@@ -285,7 +285,7 @@ The STLs are already in print orientation, so don't rotate them.
 |---|---|---|---|---|---|
 | `bezel.stl` | Front face down. The face gets the bed texture: textured PEI gives a matte finish that hides fingerprints. | None. The opening chamfer is 45 degrees, the tongue ledge is about 51 degrees, and the snap bumps have about 51 degree catch faces. | 15% | 1 h 24 m | 38 g / 12.8 m |
 | `shell.stl` | Back face down, open front up | None. The four screw wells end in 7 mm round bridges with two "bridge trick" layers. If your slicer's auto-support paints anything inside the wells, block it. The other holes that run horizontally in print are teardrops or short flat bridges. | 15% | 5 h 36 m | 82 g / 27.6 m |
-| `stand.stl` | Base down | None. The two counterbores end in 6.6 mm bridges. | 15% | 2 h 53 m | 69 g / 23.3 m |
+| `stand.stl` | Base down | None. The two counterbores end in 6.6 mm bridges. | 15% | 2 h 46 m | 67 g / 22.4 m |
 | `spacers.stl` | Standing up (2 pieces) | None | 100% | 6 m | 0.5 g |
 | `coupon.stl` | As exported (4 pieces) | None | 15% | 13 m | 3.4 g |
 | **Total** (bezel + shell + stand + spacers) | | | | **about 10 h** | **about 190 g** |
@@ -297,7 +297,7 @@ same range or a little faster. Older bed-slingers at 50 to 60 mm/s take 1.5 to
 
 Two-panel build: `bezel_left` and `bezel_right` take 1 h 10 m and 32 g each,
 `shell_left` and `shell_right` 5 h 38 m and 76 g each, and `stand_left` and
-`stand_right` 2 h 12 m and 57 g each.
+`stand_right` 2 h 9 m and 56 g each.
 
 Material:
 
@@ -491,7 +491,7 @@ Edit these at the top of `enclosure.scad`, or pass them with `-D` to the scripts
 - **Wall mount.** `wall_mount = true` adds two keyhole slots, with closed
   pockets behind them, to the back wall. It is off by default because you chose
   the desk stand. `desk_stand = false` removes the stand bosses.
-- **Tilt.** `stand_tilt` (default 12).
+- **Tilt.** `stand_tilt` (default 6).
 - **Bed.** `bed_x`, `bed_y`. Parts are split automatically when the case is
   wider than the bed.
 
