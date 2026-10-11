@@ -36,8 +36,11 @@ class BDFFont:
         self.descent = 0
         self._parse(path, max_codepoint)
         self.height = self.ascent + self.descent
-        cap = self.glyphs.get(ord("0")) or self.glyphs.get(ord("X"))
-        self.cap_height = cap.bbx_h + cap.bbx_y if cap else self.ascent
+        # Ink metrics of capitals and digits (fonts often have blank rows above
+        # the caps), so layouts can place text by where pixels actually are.
+        box = self.render("0123456789ABCDEFGHIKLMNOPRSTUVWXYZ").getbbox()
+        self.cap_top = box[1] if box else 0
+        self.cap_height = (box[3] - box[1]) if box else self.ascent
 
     def _parse(self, path: Path, max_cp: int) -> None:
         enc = -1
@@ -81,6 +84,18 @@ class BDFFont:
     def text_width(self, text: str, spacing: int = 0) -> int:
         widths = [g.width for g in map(self.glyph, text) if g]
         return sum(widths) + spacing * max(0, len(widths) - 1)
+
+    def draw_cap(
+        self,
+        img: Image.Image,
+        x: int,
+        y: int,
+        text: str,
+        color: tuple[int, int, int],
+        spacing: int = 0,
+    ) -> int:
+        """Draw text so the top of its capitals/digits lands exactly on row y."""
+        return self.draw(img, x, y - self.cap_top, text, color, spacing)
 
     def ink_bounds(self, text: str, spacing: int = 0) -> tuple[int, int]:
         """(left, right) columns that actually contain pixels, for tight centering."""
