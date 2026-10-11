@@ -73,15 +73,26 @@ def render_b(game: Game, ctx: RenderContext, hl: Highlight = NO_HIGHLIGHT) -> Im
         had_logo = draw_team_mark(img, game, c.team, box, ctx, visible=visible)
         cx = (box[0] + box[2] - 1) / 2
         score = score_text(c, game)
+        score_ink = None  # (left, right, top, cap height) of the drawn score
         if score:
             f = fit_font(score, box_w, ("7x13B", "6x13B", "5x8"))
             draw_centered(img, f, cx, 22, score, color)
+            left, right = f.ink_bounds(score)
+            x = round(cx - (right - left) / 2)
+            score_ink = (x, x + right - left, 22, f.cap_height)
         elif had_logo:  # before the game: show the abbreviation under the logo
             f = fit_font(c.team.abbr, box_w, ("6x10", "5x7", "4x6"))
             draw_centered(img, f, cx, 23, c.team.abbr, team_rgb(c.team))
         if has_possession(game, c, ctx):
-            dot_x = box[2] + 1 if side == "away" else box[0] - 3
-            draw_dot(img, dot_x, box[3] - 3, possession_color(game))
+            if score_ink:
+                # Beside the score, on the side facing the middle of the panel.
+                ink_l, ink_r, top, cap = score_ink
+                dot_x = ink_r + 2 if side == "away" else ink_l - 4
+                dot_y = top + cap // 2 - 1
+            else:
+                dot_x = box[2] + 1 if side == "away" else box[0] - 3
+                dot_y = box[3] - 3
+            draw_dot(img, dot_x, dot_y, possession_color(game))
     _status_stack(img, game, ctx, box_w, 64 - box_w, 0, 21)
     tf = font("tom-thumb")
     draw_centered(img, tf, 31.5, 25, league_label(game), LEAGUE_COLOR)

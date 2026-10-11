@@ -5,6 +5,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytest
+from PIL import ImageChops
 
 from sportsticker.app import Renderer, TickerApp, transition_frames
 from sportsticker.backend import HeadlessBackend
@@ -106,6 +107,31 @@ def test_flash_blinks_and_changes_score_color():
     plain = LAYOUTS["a"](g, ctx, Highlight())
     on = LAYOUTS["a"](g, ctx, Highlight("home", True))
     assert plain.tobytes() != on.tobytes()
+
+
+def test_layout_b_possession_dot_sits_beside_the_score():
+    ctx = RenderContext(TZ, NOW)
+    for sa, sh in ((21, 7), (7, 21), (0, 0)):
+        g = mk(detail="4:12 - 3rd", clock="4:12", period=3, sa=sa, sh=sh)
+        no_ball = LAYOUTS["b"](
+            replace(g, situation=Situation(None, "2nd & 5", "2&5")), ctx, Highlight()
+        )
+        score_row = no_ball.crop((0, 22, 64, 32)).convert("L")
+
+        def lit(x, row=score_row):
+            return any(row.getpixel((x, y)) for y in range(row.height))
+
+        for team_id, side in (("1", "away"), ("2", "home")):
+            sit = Situation(team_id, "2nd & 5", "2&5")
+            img = LAYOUTS["b"](replace(g, situation=sit), ctx, Highlight())
+            x0, y0, x1, y1 = ImageChops.difference(img, no_ball).getbbox()
+            # Only a 2x2 dot changes, inside the score row (scores start at y=22).
+            assert (x1 - x0, y1 - y0) == (2, 2) and y0 >= 22 and y1 <= 32
+            # It sits on the inner side of that team's score, 2 empty columns away.
+            if side == "away":
+                assert not lit(x0 - 1) and not lit(x0 - 2) and lit(x0 - 3)
+            else:
+                assert not lit(x1) and not lit(x1 + 1) and lit(x1 + 2)
 
 
 def test_clock_screen():
