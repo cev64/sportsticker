@@ -58,6 +58,18 @@ def start_time(game: Game, tz: ZoneInfo, now: datetime | None = None) -> tuple[s
     return hm, ampm
 
 
+_DOWN = re.compile(r"^\s*([1-4])(?:st|nd|rd|th)?\s*(?:&|and)\s*(\w+)", re.I)
+
+
+def compact_down(text: str) -> str:
+    """'3rd & 10' -> '3&10', '1st & Goal' -> '1&G'; '' if unrecognised."""
+    m = _DOWN.match(text or "")
+    if not m:
+        return ""
+    dist = m.group(2)
+    return f"{m.group(1)}&{'G' if dist.lower() == 'goal' else dist}"
+
+
 _FINAL_SUFFIX = re.compile(r"final\s*/\s*(\w+)", re.I)
 
 
@@ -85,8 +97,10 @@ def game_status(game: Game, tz: ZoneInfo, now: datetime | None = None) -> Status
     # live
     sport = _sport(game)
     football_detail = ""
-    if sport == "football" and game.situation and game.situation.short_down_distance:
-        football_detail = game.situation.short_down_distance.replace(" ", "")
+    if sport == "football" and game.situation:
+        football_detail = compact_down(
+            game.situation.short_down_distance or game.situation.down_distance or ""
+        )
     if "half" in low and "1st half" not in low and "2nd half" not in low:
         return Status("HALF", "", football_detail)
     if sport == "soccer":

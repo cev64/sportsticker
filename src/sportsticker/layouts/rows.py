@@ -60,7 +60,7 @@ def _row(
                 img, game, c.team, (0, top, LOGO_BOX, top + ROW_H), ctx, visible=blink_visible
             )
             x = LOGO_BOX + 2
-    score = score_text(c)
+    score = score_text(c, game)
     sf = fit_font(score or "0", 22, SCORE_FONTS)
     score_left = 64 - sf.text_width(score) if score else 64
     # Rank (college) in small dim digits before the abbreviation, if it fits.

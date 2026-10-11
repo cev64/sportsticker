@@ -72,7 +72,7 @@ def render_b(game: Game, ctx: RenderContext, hl: Highlight = NO_HIGHLIGHT) -> Im
         visible = not (hl.side == side and not hl.on)
         had_logo = draw_team_mark(img, game, c.team, box, ctx, visible=visible)
         cx = (box[0] + box[2] - 1) / 2
-        score = score_text(c)
+        score = score_text(c, game)
         if score:
             f = fit_font(score, box_w, ("7x13B", "6x13B", "5x8"))
             draw_centered(img, f, cx, 22, score, color)
@@ -95,7 +95,7 @@ def render_c(game: Game, ctx: RenderContext, hl: Highlight = NO_HIGHLIGHT) -> Im
     away_c, home_c = score_colors(game, hl)
     rows = ((game.away, 0, away_c, "away"), (game.home, 16, home_c, "home"))
     score_room = col_x - (logo_box + 3) - 2
-    scores = [score_text(c) for c, *_ in rows]
+    scores = [score_text(c, game) for c, *_ in rows]
     longest = max(scores, key=len) or "0"
     sf = fit_font(longest, score_room, ("8x13B", "7x13B", "6x13B", "5x8"))
     for (c, top, color, side), score in zip(rows, scores, strict=True):

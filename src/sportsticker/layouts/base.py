@@ -103,8 +103,11 @@ def draw_right(img, f: BDFFont, right_x: int, y: int, text: str, color: RGB) -> 
     return x + left
 
 
-def score_text(c: Competitor) -> str:
-    return "" if c.score is None else str(c.score)
+def score_text(c: Competitor, game: Game | None = None) -> str:
+    """Score as text; blank before the game (ESPN sends 0-0 for scheduled games)."""
+    if c.score is None or (game is not None and game.state == "pre"):
+        return ""
+    return str(c.score)
 
 
 def score_colors(game: Game, hl: Highlight) -> tuple[RGB, RGB]:
