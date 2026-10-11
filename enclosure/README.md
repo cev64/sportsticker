@@ -27,6 +27,7 @@ with no supports, and assembly needs no soldering or heat-set inserts.
 
 - [Files](#files)
 - [Design summary](#design-summary)
+- [Gallery](#gallery)
 - [Dimension table and sources](#dimension-table-and-sources)
 - [Hardware list](#hardware-list)
 - [Print guide](#print-guide)
@@ -131,6 +132,26 @@ Features:
    came out of the bottom, the stand would need to be about 45 mm tall to fit
    them. With the bay, both plugs sit inside the case's outline and both cables
    leave at the back.
+
+## Gallery
+
+All views show the default build on the 6 degree desk stand. The white block
+and rod at the back bottom are the USB-C plug and its cable, leaving through
+the gripping slot in the bottom wall. The short black rod higher up is the
+barrel-jack cable leaving the C-clip; only its first 25 mm is drawn.
+
+| | |
+|---|---|
+| ![Eye level, straight on](renders/views/01_eye_level_front.png) | ![Low angle](renders/views/08_low_angle.png) |
+| Eye level, straight on | Low angle, from the desk |
+| ![Front left](renders/views/02_front_left_3q.png) | ![Front right](renders/views/03_front_right_3q.png) |
+| Front, from the left | Front, from the right |
+| ![Side profile](renders/views/04_side_left_ortho.png) | ![Top down](renders/views/05_top_down.png) |
+| Side profile (orthographic) | Top down, showing the top vents |
+| ![Back left](renders/views/06_back_left_3q.png) | ![Back right](renders/views/07_back_right_3q.png) |
+| Back, from the left | Back, from the right: access bay, plugs, vents |
+| ![Exploded](renders/views/09_exploded_side.png) | |
+| Exploded: shell with Pi and bonnet, panel, bezel, stand | |
 
 ## Dimension table and sources
 

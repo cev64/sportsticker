@@ -24,6 +24,17 @@ png side      assembly "620,40,90,0,40,60"         1600,1000 "${EXTRA[@]}"
 png front_diffuser assembly "-330,-430,300,0,25,60" 1600,1000 -D use_diffuser=true "${EXTRA[@]}"
 png two_panel assembly "-420,-620,380,0,25,60"     1600,1000 -D panels=2 "${EXTRA[@]}"
 png coupon    coupon   "10,-70,110,20,26,0"        1200,900  "${EXTRA[@]}"
+# Gallery views in renders/views/.
+mkdir -p renders/views
+png views/01_eye_level_front assembly "0,-520,95,0,30,70"     1600,1100 "${EXTRA[@]}"
+png views/02_front_left_3q   assembly "-380,-420,200,0,30,60" 1600,1100 "${EXTRA[@]}"
+png views/03_front_right_3q  assembly "380,-420,200,0,30,60"  1600,1100 "${EXTRA[@]}"
+PROJ=o png views/04_side_left_ortho assembly "-500,40,60,0,40,60" 1600,1100 "${EXTRA[@]}"
+png views/05_top_down        assembly "0,-60,520,0,40,0"      1600,1100 "${EXTRA[@]}"
+png views/06_back_left_3q    assembly "-360,480,220,0,30,60"  1600,1100 "${EXTRA[@]}"
+png views/07_back_right_3q   assembly "360,480,220,0,30,60"   1600,1100 "${EXTRA[@]}"
+png views/08_low_angle       assembly "-260,-380,30,0,30,70"  1600,1100 "${EXTRA[@]}"
+png views/09_exploded_side   exploded "-560,-200,260,0,40,60" 1600,1100 "${EXTRA[@]}"
 # Both cross-sections side by side.
 convert renders/section.png -crop 700x1000+400+60 +repage renders/_s1.png
 convert renders/section2.png -crop 700x1000+400+60 +repage renders/_s2.png
