@@ -23,7 +23,7 @@ PROJ=o png section2  section2 "400,26,4,0,26,4"           1400,1100 -D show_leds
 png side      assembly "620,40,90,0,40,60"         1600,1000 "${EXTRA[@]}"
 png front_diffuser assembly "-330,-430,300,0,25,60" 1600,1000 -D use_diffuser=true "${EXTRA[@]}"
 png two_panel assembly "-420,-620,380,0,25,60"     1600,1000 -D panels=2 "${EXTRA[@]}"
-png coupon    coupon   "10,-70,110,20,26,0"        1200,900  "${EXTRA[@]}"
+png coupon    coupon   "28,-95,140,34,20,0"        1200,900  "${EXTRA[@]}"
 # Gallery views in renders/views/.
 mkdir -p renders/views
 png views/01_eye_level_front assembly "0,-520,95,0,30,70"     1600,1100 "${EXTRA[@]}"
@@ -35,6 +35,11 @@ png views/06_back_left_3q    assembly "-360,480,220,0,30,60"  1600,1100 "${EXTRA
 png views/07_back_right_3q   assembly "360,480,220,0,30,60"   1600,1100 "${EXTRA[@]}"
 png views/08_low_angle       assembly "-260,-380,30,0,30,70"  1600,1100 "${EXTRA[@]}"
 png views/09_exploded_side   exploded "-560,-200,260,0,40,60" 1600,1100 "${EXTRA[@]}"
+# The screwless details, in a lighter grey so they read: the back with its
+# pin pockets and pin wells, and the case slid forward off the stand's dovetails.
+LIGHT=(-D 'col_print=[0.52,0.53,0.56]' -D 'col_print2=[0.60,0.61,0.64]' -D 'col_stand=[0.45,0.46,0.49]')
+png views/10_back_screwless  assembly    "300,430,210,0,20,30"  1600,1100 -D show_leds=false "${LIGHT[@]}" "${EXTRA[@]}"
+png views/11_stand_slide     stand_slide "400,420,260,0,-10,40" 1600,1100 -D show_leds=false "${LIGHT[@]}" "${EXTRA[@]}"
 # Both cross-sections side by side.
 convert renders/section.png -crop 700x1000+400+60 +repage renders/_s1.png
 convert renders/section2.png -crop 700x1000+400+60 +repage renders/_s2.png
