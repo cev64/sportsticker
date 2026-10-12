@@ -162,8 +162,10 @@ barrel-jack cable leaving the C-clip; only its first 25 mm is drawn.
 | Side profile (orthographic) | Top down, showing the top vents |
 | ![Back left](renders/views/06_back_left_3q.png) | ![Back right](renders/views/07_back_right_3q.png) |
 | Back, from the left | Back, from the right: access bay, plugs, vents |
-| ![Exploded](renders/views/09_exploded_side.png) | |
-| Exploded: shell with Pi and bonnet, panel, bezel, stand | |
+| ![Exploded](renders/views/09_exploded_side.png) | ![Back, screwless](renders/views/10_back_screwless.png) |
+| Exploded: shell with Pi and bonnet, panel, bezel, stand | Back, in light grey: the four panel-pin wells (stems showing), the four Pi pin pockets and the two dovetail grooves at the bottom |
+| ![Case slid off the stand](renders/views/11_stand_slide.png) | |
+| The case slid forward off the stand: the dovetail tongues on the pads and the grooves they slide into | |
 
 ## Dimension table and sources
 

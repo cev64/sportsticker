@@ -17,7 +17,7 @@
 //  Printable parts (already in print orientation): bezel shell stand spacers
 //  snap_pins coupon pins, and bezel_left/_right, shell_left/_right, stand_left/_right
 //  for the 2-panel build. Views: assembly (on the stand), exploded, case (no
-//  stand), section, section2, hardware. Collision checks: check_* at the end.
+//  stand), stand_slide, section, section2, hardware. Collision checks: check_* at the end.
 //  Scripts: export.sh (STLs), render.sh (PNGs), check.sh (collisions).
 
 /* [What to render] */
@@ -1420,7 +1420,14 @@ module print_bezel() { rotate([90, 0, 0]) bezel(); }                       // fr
 module print_shell() { translate([0, 0, depth]) rotate([-90, 0, 0]) shell(); } // back face down
 module print_stand() { stand(); }
 
+// The case slid forward off the stand's dovetails, to show how they attach.
+module stand_slide() {
+    on_stand() translate([0, -(dt_len + 6), 0]) assembly(0);
+    if (desk_stand) color(col_stand) render(convexity = 6) stand();
+}
+
 if (part == "assembly") on_desk(0);
+else if (part == "stand_slide") stand_slide();
 else if (part == "exploded") on_desk(explode);
 else if (part == "case") assembly(0);
 else if (part == "section") section_view(P(pi_holes[0])[0]);
