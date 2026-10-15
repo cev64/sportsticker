@@ -26,12 +26,14 @@ display:
   layout: b                 # a | b | c | text   (see README for pictures)
   logo_variant: auto        # auto | logo | dark   (auto picks what reads best on black)
   logos: true               # false = abbreviations only
+  team_labels: top          # layout b: small team initials with the logos
+                            #   top | under | center | off
   slide_seconds: 10
   favorite_live_seconds: 10 # dwell time for a live game with a favorite team
   score_flash_seconds: 4    # highlight the scoring team this long after a score
   show_situation: true      # possession dot / down & distance when ESPN has it
   transitions: true         # animate between slides (set false to save CPU)
-  transition_style: push    # push | split | wipe | fade
+  transition_style: scroll  # push | scroll | split | wipe | fade
   transition_ms: 1000
   animation_fps: 30         # frame rate for flashes and transitions only
 
