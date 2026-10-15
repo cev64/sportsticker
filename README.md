@@ -211,8 +211,9 @@ validate the file without starting. Defaults below are the values shipped in
 | `display.favorite_live_seconds` | `10` | Seconds for a live game with a favorite team. |
 | `display.score_flash_seconds` | `4` | How long the scoring team is highlighted after a score. |
 | `display.show_situation` | `true` | Show possession and down and distance when ESPN has them. |
-| `display.transitions` | `false` | Horizontal push between slides. Costs some CPU. |
-| `display.transition_ms` | `400` | Duration of a transition. |
+| `display.transitions` | `true` | Animate between slides. Costs some CPU. |
+| `display.transition_style` | `scroll` | `scroll` (vertical: the next slide rises from the bottom), `push` (horizontal), `split`, `wipe` or `fade`. |
+| `display.transition_ms` | `1000` | Duration of a transition. |
 | `display.animation_fps` | `30` | Frame rate for flashes and transitions only. |
 | `brightness.day` | `60` | Brightness 0-100 during the day. Wins over `matrix.brightness` at runtime. |
 | `brightness.night` | `15` | Brightness 0-100 at night. |

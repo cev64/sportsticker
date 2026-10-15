@@ -106,6 +106,7 @@ def transition_frames(style: str, old: Image.Image, new: Image.Image, steps: int
     """Intermediate frames from `old` to `new` (the final frame equals `new`).
 
     push:  old slides out left while new enters from the right
+    scroll: old scrolls up and out while new rises from the bottom
     split: top half (away team) enters from the left, bottom half from the right
     wipe:  new is revealed left to right behind a bright leading edge
     fade:  cross-dissolve
@@ -118,6 +119,12 @@ def transition_frames(style: str, old: Image.Image, new: Image.Image, steps: int
             out.append(Image.blend(old, new, t))
             continue
         f = Image.new("RGB", old.size)
+        if style == "scroll":
+            off = round(h * t)
+            f.paste(old, (0, -off))
+            f.paste(new, (0, h - off))
+            out.append(f)
+            continue
         off = round(w * t)
         if style == "split":
             mid = h // 2 - 3  # the two team rows sit above row ~13 in every layout

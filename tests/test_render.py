@@ -204,6 +204,22 @@ def test_layout_b_labels_need_a_score_and_a_logo():
         assert img.tobytes() == plain
 
 
+def test_scroll_transition_moves_slides_up():
+    old = Image.new("RGB", (64, 32), (255, 0, 0))
+    new = Image.new("RGB", (64, 32), (0, 0, 255))
+    frames = transition_frames("scroll", old, new, 8)
+    assert frames[-1].tobytes() == new.tobytes()
+    cuts = []
+    for f in frames[:3]:  # mid-scroll (the ease-out lands early)
+        cut = next(y for y in range(32) if f.getpixel((0, y)) == (0, 0, 255))
+        assert 0 < cut < 32
+        # Old above, new below the cut, across the full width.
+        assert f.crop((0, 0, 64, cut)).getcolors() == [(64 * cut, (255, 0, 0))]
+        assert f.crop((0, cut, 64, 32)).getcolors() == [(64 * (32 - cut), (0, 0, 255))]
+        cuts.append(cut)
+    assert cuts == sorted(cuts, reverse=True)  # the new slide keeps rising
+
+
 def test_clock_screen():
     img = render_clock(datetime(2026, 10, 11, 19, 42))
     assert img.size == (64, 32) and img.getbbox() is not None

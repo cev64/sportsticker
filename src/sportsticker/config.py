@@ -20,7 +20,7 @@ from .models import LEAGUES
 LAYOUTS = ("a", "b", "c", "text")
 LOGO_VARIANTS = ("auto", "logo", "dark")
 TEAM_LABELS = ("top", "under", "center", "off")
-TRANSITION_STYLES = ("push", "split", "wipe", "fade")
+TRANSITION_STYLES = ("push", "scroll", "split", "wipe", "fade")
 MIN_POLL_SECONDS = 30
 
 # RGBMatrixOptions attributes we pass through, with the type each must have.

@@ -33,7 +33,7 @@ display:
   score_flash_seconds: 4    # highlight the scoring team this long after a score
   show_situation: true      # possession dot / down & distance when ESPN has it
   transitions: true         # animate between slides (set false to save CPU)
-  transition_style: push    # push | split | wipe | fade
+  transition_style: scroll  # push | scroll | split | wipe | fade
   transition_ms: 1000
   animation_fps: 30         # frame rate for flashes and transitions only
 
