@@ -58,7 +58,17 @@ Set `display.layout` in `config.yaml`, or pass `--layout`.
 - **a**: Team rows, each with a small logo, abbreviation and score. The
   status line sits below (for example `Q3 4:12` with down and distance).
 - **b**: Big logos on the left and right, score below each logo, and the clock
-  and period in the middle.
+  and period in the middle. Small team initials go with the logos so every
+  team can be told apart (`display.team_labels`):
+  - `top` (default): initials above the logo. The logo box is 21x15 instead of
+    21x21, so wide logos keep their size and round ones shrink a little.
+  - `under`: initials between the logo and the score.
+  - `center`: full-size logos. The initials sit at the top of the middle column
+    with the clock and period under them, and the sport glyph is left out.
+  - `off`: no initials.
+
+  Initials only show while a game has a score and a logo. Before the game the
+  abbreviation already sits under the logo, and without a logo it fills the box.
 - **c**: Logos with large scores beside them, and the clock and period in a
   right-hand column.
 - **text**: No logos, text only. Use it when you do not want logos or the
@@ -196,6 +206,7 @@ validate the file without starting. Defaults below are the values shipped in
 | `display.layout` | `a` | Slide layout: `a`, `b`, `c` or `text`. |
 | `display.logo_variant` | `auto` | Logo colors: `auto` picks what reads best on black, or force `logo` or `dark`. |
 | `display.logos` | `true` | `false` shows abbreviations only. |
+| `display.team_labels` | `top` | Layout B team initials: `top`, `under`, `center` or `off`. |
 | `display.slide_seconds` | `6` | Seconds each slide stays on screen. |
 | `display.favorite_live_seconds` | `10` | Seconds for a live game with a favorite team. |
 | `display.score_flash_seconds` | `4` | How long the scoring team is highlighted after a score. |

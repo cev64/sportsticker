@@ -55,6 +55,7 @@ class Renderer:
             now=now,
             logos=self.logos,
             show_situation=self.cfg.display.show_situation,
+            team_labels=self.cfg.display.team_labels,
         )
 
     def _logo_key(self, slide: Slide, layout: str) -> tuple:

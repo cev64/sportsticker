@@ -5,7 +5,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytest
-from PIL import ImageChops
+from PIL import Image, ImageChops
 
 from sportsticker.app import Renderer, TickerApp, transition_frames
 from sportsticker.backend import HeadlessBackend
@@ -13,6 +13,7 @@ from sportsticker.config import TRANSITION_STYLES, load_config
 from sportsticker.espn import parse_scoreboard
 from sportsticker.layouts import LAYOUTS, Highlight, RenderContext, render_clock
 from sportsticker.layouts.glyphs import PALETTE, league_glyph
+from sportsticker.layouts.split import label_rgb
 from sportsticker.models import LEAGUES, Competitor, Game, Situation, Team
 from sportsticker.poller import ScoreState
 from sportsticker.slides import ScoreTracker, Slide, build_playlist, order_games
@@ -133,6 +134,74 @@ def test_layout_b_possession_dot_sits_beside_the_score():
                 assert not lit(x0 - 1) and not lit(x0 - 2) and lit(x0 - 3)
             else:
                 assert not lit(x1) and not lit(x1 + 1) and lit(x1 + 2)
+
+
+LOGO_INK = (0, 200, 0)
+
+
+class BlockLogos:
+    """Solid green logos, aspect = width / height, fitted to a size x size box."""
+
+    def __init__(self, aspect=1.0):
+        self.aspect = aspect
+
+    def get(self, league, abbr, size):
+        w, h = (size, round(size / self.aspect)) if self.aspect >= 1 else (size, size)
+        return Image.new("RGB", (w, h), LOGO_INK)
+
+
+def _rows_with(img, color, x0, x1):
+    return {y for y in range(32) for x in range(x0, x1) if img.getpixel((x, y)) == color}
+
+
+def _ctx(labels, aspect=1.0):
+    return RenderContext(TZ, NOW, BlockLogos(aspect), team_labels=labels)
+
+
+def test_layout_b_team_labels_move_the_logo_to_make_room():
+    g = mk(league="nba", detail="4:12 - 3rd", clock="4:12", period=3, sa=98, sh=104)
+    away_label = label_rgb(g.away.team)
+    for labels, logo_rows, label_rows in (
+        ("off", range(0, 21), set()),
+        ("top", range(6, 21), set(range(0, 5))),
+        ("under", range(0, 15), set(range(16, 21))),
+    ):
+        img = LAYOUTS["b"](g, _ctx(labels), Highlight())
+        assert _rows_with(img, LOGO_INK, 0, 21) == set(logo_rows), labels
+        assert _rows_with(img, away_label, 0, 21) == label_rows, labels
+        # The score row is the same in every mode.
+        off = LAYOUTS["b"](g, _ctx("off"), Highlight())
+        assert img.crop((0, 22, 64, 32)).tobytes() == off.crop((0, 22, 64, 32)).tobytes()
+
+
+def test_layout_b_wide_logo_keeps_its_width_above_the_label():
+    g = mk(league="nba", detail="4:12 - 3rd", clock="4:12", period=3)
+    img = LAYOUTS["b"](g, _ctx("top", aspect=21 / 12), Highlight())
+    cols = {x for x in range(21) for y in range(32) if img.getpixel((x, y)) == LOGO_INK}
+    assert len(cols) == 21  # the 21x12 logo fits the 21x15 box, not shrunk to 15
+
+
+def test_layout_b_center_labels_sit_in_the_middle_column():
+    g = mk(league="nba", detail="4:12 - 3rd", clock="4:12", period=3)
+    img = LAYOUTS["b"](g, _ctx("center"), Highlight())
+    assert _rows_with(img, LOGO_INK, 0, 21) == set(range(0, 21))
+    assert _rows_with(img, label_rgb(g.away.team), 21, 43) == set(range(0, 5))
+    assert _rows_with(img, label_rgb(g.home.team), 21, 43) == set(range(6, 11))
+    # The status takes the place of the sport glyph.
+    assert not _rows_with(img, PALETTE["O"], 21, 43)
+
+
+def test_layout_b_labels_need_a_score_and_a_logo():
+    pre = mk(league="nba", state="pre", detail="Sun, October 11th at 7:20 PM EDT", sa=0, sh=0)
+    for labels in ("top", "under", "center"):
+        same = LAYOUTS["b"](pre, _ctx(labels), Highlight()).tobytes()
+        assert same == LAYOUTS["b"](pre, _ctx("off"), Highlight()).tobytes()
+    live = mk(league="nba", detail="4:12 - 3rd", clock="4:12", period=3)
+    no_logos = RenderContext(TZ, NOW, team_labels="off")
+    plain = LAYOUTS["b"](live, no_logos, Highlight()).tobytes()
+    for labels in ("top", "under", "center"):
+        img = LAYOUTS["b"](live, replace(no_logos, team_labels=labels), Highlight())
+        assert img.tobytes() == plain
 
 
 def test_clock_screen():
