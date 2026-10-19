@@ -83,9 +83,12 @@ abbreviation instead. Set `display.logos: false` to always use abbreviations.
 Hardware: Raspberry Pi 4 (1 GB), Adafruit RGB Matrix Bonnet, one 64x32 HUB75
 panel. The steps below assume user `charlie` and hostname `ticker`.
 
-1. **Flash the SD card.** In Raspberry Pi Imager, choose Raspberry Pi OS Lite
-   (64-bit, Bookworm). In the settings, set hostname `ticker`, username
-   `charlie`, Wi-Fi, and enable SSH with your public key.
+1. **Flash the SD card.** In Raspberry Pi Imager, open "Raspberry Pi OS
+   (other)" and choose **Raspberry Pi OS (Legacy, 64-bit) Lite**. That is
+   Bookworm, the release these steps are written for. The plain "Raspberry Pi
+   OS Lite (64-bit)" entry is now Trixie, which this project has not been
+   tested on. In the settings, set hostname `ticker`, username `charlie`,
+   Wi-Fi, and enable SSH with your public key.
 
 2. **Connect.** `ssh charlie@ticker.local`
 
