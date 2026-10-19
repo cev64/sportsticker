@@ -196,15 +196,16 @@ validate the file without starting. Defaults below are the values shipped in
 | `timezone` | `America/New_York` | Time zone for "today", overnight windows and the brightness schedule. |
 | `leagues.<league>` | see file | `true` shows the league, `false` skips it. Order in the file is display order. Known: `nfl`, `ncaaf`, `nba`, `ncaab`, `wnba`, `mlb`, `nhl`, `epl`, `mls`. |
 | `favorites.<league>` | `nfl: [KC]`, `ncaab: [CREI]`, `nba: [OKC, CHA]`, `nhl: [STL]`, `epl: [TOT]` | ESPN abbreviations of favorite teams. Favorites sort first, and their live games stay longer. |
-| `display.layout` | `a` | Slide layout: `a`, `b`, `c` or `text`. |
+| `display.layout` | `b` | Slide layout: `a`, `b`, `c` or `text`. |
 | `display.logo_variant` | `auto` | Logo colors: `auto` picks what reads best on black, or force `logo` or `dark`. |
 | `display.logos` | `true` | `false` shows abbreviations only. |
-| `display.slide_seconds` | `6` | Seconds each slide stays on screen. |
+| `display.slide_seconds` | `10` | Seconds each slide stays on screen. |
 | `display.favorite_live_seconds` | `10` | Seconds for a live game with a favorite team. |
 | `display.score_flash_seconds` | `4` | How long the scoring team is highlighted after a score. |
 | `display.show_situation` | `true` | Show possession and down and distance when ESPN has them. |
-| `display.transitions` | `false` | Horizontal push between slides. Costs some CPU. |
-| `display.transition_ms` | `400` | Duration of a transition. |
+| `display.transitions` | `true` | Animate between slides. Costs some CPU. |
+| `display.transition_style` | `push` | Transition effect: `push`, `split`, `wipe` or `fade`. |
+| `display.transition_ms` | `1000` | Duration of a transition. |
 | `display.animation_fps` | `30` | Frame rate for flashes and transitions only. |
 | `brightness.day` | `60` | Brightness 0-100 during the day. Wins over `matrix.brightness` at runtime. |
 | `brightness.night` | `15` | Brightness 0-100 at night. |
@@ -285,7 +286,8 @@ python -m sportsticker fixtures --out DIR
 - `--profile` records render timings. `make profile` runs the replay with
   `--fake-live` headless for 60 seconds. On macOS, install `coreutils` and use
   `make profile TIMEOUT=gtimeout`.
-- Keep `display.transitions: false` on a Pi 4 unless you need the effect.
+- Transitions are on in the shipped `config.yaml`. On a Pi 4, set
+  `display.transitions: false` if you see flicker or want to save CPU.
 
 ## Data source
 
