@@ -30,6 +30,14 @@ def test_config_collects_all_problems():
         assert needle in msg
 
 
+def test_team_labels_default_to_top_and_are_validated():
+    assert parse_config({"leagues": ["nfl"]}).display.team_labels == "top"
+    cfg = parse_config({"leagues": ["nfl"], "display": {"team_labels": "center"}})
+    assert cfg.display.team_labels == "center"
+    with pytest.raises(ConfigError, match="team_labels"):
+        parse_config({"leagues": ["nfl"], "display": {"team_labels": "side"}})
+
+
 def test_unquoted_yaml_time_is_accepted():
     cfg = parse_config({"leagues": ["nfl"], "brightness": {"night_start": 22 * 60 + 30}})
     assert cfg.brightness.night_start == time(22, 30)

@@ -50,6 +50,7 @@ class RenderContext:
     now: datetime
     logos: LogoSource | None = None
     show_situation: bool = True
+    team_labels: str = "top"  # layout B: team initials "top" | "under" | "center" | "off"
 
     def status(self, game: Game) -> Status:
         return game_status(game, self.tz, self.now)
@@ -168,8 +169,15 @@ def draw_team_mark(
     if not visible:
         return True
     x0, y0, x1, y1 = box
-    size = min(x1 - x0, y1 - y0)
-    logo = ctx.logo(game, team, size)
+    w, h = x1 - x0, y1 - y0
+    logo = None
+    if w != h:
+        # A wide logo prepared for the long side may still fit a short box.
+        big = ctx.logo(game, team, max(w, h))
+        if big is not None and big.width <= w and big.height <= h:
+            logo = big
+    if logo is None:
+        logo = ctx.logo(game, team, min(w, h))
     if logo is not None:
         paste_center(img, logo, box)
         return True
