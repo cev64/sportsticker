@@ -7,13 +7,20 @@ B:                                       C:
  │      │  3&7   │      │                 │ home │  24       │  3&7  │
  │  27  │  (ball)│  24  │                 └──────┴───────────┴───────┘
  └──────┴────────┴──────┘
+
+B with team_labels (small initials, so every logo can be told apart):
+  top     initials above a 21x15 logo        under   initials below it
+  center  full-size logos; initials at the top of the middle column with the
+          status stacked under them (no sport glyph)
+  off     the plain layout above
 """
 
 from __future__ import annotations
 
 from PIL import Image
 
-from ..models import Game
+from ..colors import RGB, lift
+from ..models import Game, Team
 from .base import (
     DETAIL_COLOR,
     NO_HIGHLIGHT,
@@ -26,6 +33,7 @@ from .base import (
     draw_right,
     draw_team_mark,
     fit_font,
+    font,
     has_possession,
     possession_color,
     score_colors,
@@ -35,6 +43,11 @@ from .base import (
 )
 
 STACK_FONTS = ("5x7", "4x6", "tom-thumb")
+LABEL_FONT = "tom-thumb"
+# Initials are only 5 px tall, so they get more light than the big abbreviation.
+LABEL_MIN_LIGHTNESS = 0.62
+B_BOX = 21  # layout B logo column width (and logo box height without labels)
+LABEL_LOGO_H = 15  # logo box height when the initials take a row
 
 
 def _status_stack(
@@ -50,6 +63,10 @@ def _status_stack(
     fonts = [fit_font(t, width, STACK_FONTS) for t, _ in lines]
     gap = 2
     total = sum(f.cap_height for f in fonts) + gap * (len(lines) - 1)
+    if total > y1 - y0:  # short column: smaller fonts, tighter lines
+        fonts = [fit_font(t, width, STACK_FONTS[1:]) for t, _ in lines]
+        gap = 1
+        total = sum(f.cap_height for f in fonts) + gap * (len(lines) - 1)
     y = y0 + max(0, (y1 - y0 - total) // 2)
     cx = (x0 + x1 - 1) / 2
     for (text, color), f in zip(lines, fonts, strict=True):
@@ -57,19 +74,54 @@ def _status_stack(
         y += f.cap_height + gap
 
 
+def label_rgb(team: Team) -> RGB:
+    return lift(team_rgb(team), LABEL_MIN_LIGHTNESS)
+
+
+def draw_label(img: Image.Image, x: int, y: int, team: Team) -> int:
+    """Team initials with their ink top-left at (x, y). Returns the ink width."""
+    f = font(LABEL_FONT)
+    left, right = f.ink_bounds(team.abbr)
+    f.draw_cap(img, x - left, y, team.abbr, label_rgb(team))
+    return right - left
+
+
+def label_width(team: Team) -> int:
+    left, right = font(LABEL_FONT).ink_bounds(team.abbr)
+    return right - left
+
+
 def render_b(game: Game, ctx: RenderContext, hl: Highlight = NO_HIGHLIGHT) -> Image.Image:
     img = blank()
-    box_w, box_h = 21, 21
-    away_box = (0, 0, box_w, box_h)
-    home_box = (64 - box_w, 0, 64, box_h)
+    box_w = B_BOX
+    mode = ctx.team_labels
     away_c, home_c = score_colors(game, hl)
-    for c, box, color, side in (
-        (game.away, away_box, away_c, "away"),
-        (game.home, home_box, home_c, "home"),
-    ):
+    sides = ((game.away, 0, away_c, "away"), (game.home, 64 - box_w, home_c, "home"))
+    # Initials join the logo only while there is a score: before the game the
+    # abbreviation already sits under the logo, and without a logo the box
+    # shows the abbreviation itself.
+    labeled = {
+        side: mode != "off"
+        and bool(score_text(c, game))
+        and ctx.logo(game, c.team, box_w) is not None
+        for c, _, _, side in sides
+    }
+    center_tags = mode == "center" and any(labeled.values())
+    for c, x0, color, side in sides:
+        if labeled[side] and mode == "top":
+            box = (x0, B_BOX - LABEL_LOGO_H, x0 + box_w, B_BOX)
+            label_y = 0
+        elif labeled[side] and mode == "under":
+            box = (x0, 0, x0 + box_w, LABEL_LOGO_H)
+            label_y = LABEL_LOGO_H + 1
+        else:
+            box = (x0, 0, x0 + box_w, B_BOX)
+            label_y = None
         visible = not (hl.side == side and not hl.on)
         had_logo = draw_team_mark(img, game, c.team, box, ctx, visible=visible)
         cx = (box[0] + box[2] - 1) / 2
+        if label_y is not None:
+            draw_label(img, round(cx - label_width(c.team) / 2), label_y, c.team)
         score = score_text(c, game)
         score_ink = None  # (left, right, top, cap height) of the drawn score
         if score:
@@ -91,6 +143,15 @@ def render_b(game: Game, ctx: RenderContext, hl: Highlight = NO_HIGHLIGHT) -> Im
                 dot_x = box[2] + 1 if side == "away" else box[0] - 3
                 dot_y = box[3] - 3
             draw_dot(img, dot_x, dot_y, possession_color(game))
+    if center_tags:
+        # Away initials flush left, home flush right one row lower, so long
+        # abbreviations never collide; the status fills the column below.
+        if labeled["away"]:
+            draw_label(img, box_w + 2, 0, game.away.team)
+        if labeled["home"]:
+            draw_label(img, 64 - box_w - 2 - label_width(game.home.team), 6, game.home.team)
+        _status_stack(img, game, ctx, box_w, 64 - box_w, 12, 32)
+        return img
     _status_stack(img, game, ctx, box_w, 64 - box_w, 0, 21)
     draw_league_mark_centered(img, game, 31.5, 25)
     return img
